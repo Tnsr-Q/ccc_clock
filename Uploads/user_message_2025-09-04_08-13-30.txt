@@ -1,0 +1,187 @@
+Here’s a single, self-contained **Agent Mission Brief** you can paste into your orchestration system. It’s structured so a team of code+design agents (Copilot/Claude/CrewAI/etc.) can execute end-to-end: math + sims + viz + lab-facing collateral. It works with or without your bridge solver; if available, they can import it.
+
+---
+
+# 🔭 Mission: Demonstrate a lock-in detectable **information-induced time dilation** in co-located optical clocks and produce a lab-ready packet
+
+## 0) Context (give this to all agents)
+
+* Hypothesis (CCC): clock rate shifts scale with an **operational curvature ratio**
+
+  $$
+  R_{\mathrm{op}}=\frac{\dot{\mathcal K}}{\dot S_e+\dot S_{\text{loss}}}
+  $$
+
+  where $\dot{\mathcal K}$ = complexity flow, $\dot S_e$ = semantic/mutual-info rate, $\dot S_{\text{loss}}$ = erasure/entropy loss.
+* Operational geometry: small loops in **ruler/protractor** space produce base-space holonomy; in the small-loop regime,
+
+  $$
+  \varepsilon \ \approx\ \kappa\,R_{\mathrm{op}}\,A_\Sigma
+  $$
+
+  where $A_\Sigma$ is loop area in $(\ln r_\*,\theta)$ and $\kappa$ is a platform transfer factor.
+* Clock observable (Θ-only loop; ABBA sequencing):
+
+  $$
+  \boxed{\big(\Delta f/f\big)_{\mathrm{demod}} = \Gamma_\Theta\;R_{\mathrm{op}}\;A_\Sigma + \sum_k c_k\,s_k(t)}
+  $$
+
+  with $s_k$ known systematics (Stark/Zeeman/LO/thermal). Goal: isolate the first term via modulation, parity, and swaps.
+
+## 1) Target outcome (deliverables)
+
+1. **Simulation evidence** that a modulated CCC signal at $10^{-20}$ frac-freq is detectable within days with realistic instability.
+2. **Bridge pencil analysis** establishing identifiability (minimum or null) and commutator-limited floors.
+3. **Lab packet**: 2-page executive brief, 10-slide deck, and figure suite attractive enough for a top optical-clock group to green-light a feasibility call.
+4. **Reproducible code**: a small, clean repo (or PR) with a sensitivity dashboard + bridge residual tools.
+5. **Go/No-Go table** with explicit numeric thresholds for a first experiment.
+
+## 2) Roles (spawn as separate agents or tasks)
+
+* **Theory/Controls**: equations → protocols; define $\Gamma_\Theta,\kappa$; write pulse sequences.
+* **Simulation**: time-domain lock-in; Allan deviation; ε-continuation for bridge residuals.
+* **Numerics**: generalized eigen, residual minimization (Frobenius + spectral norms), commutator diagnostics, weight tuning.
+* **Viz/Design**: produce publication-grade figures and a short animated explainer (15–30 s).
+* **Writer**: 2-pager + slides; methods copy-editing; figure captions.
+* **QA**: unit tests, consistency checks, numbers cross-validation.
+
+## 3) Experiments & tasks (must complete)
+
+### A) **Metrology chain** (clock signal & time-to-detect)
+
+* Implement
+
+  $$
+  \mathrm{SNR}(\tau)=\frac{\Gamma_\Theta R_{\mathrm{op}} A_\Sigma}{\sigma_0/\sqrt{\tau}},\quad
+  \tau_\text{req}=\left(\frac{z_\alpha\,\sigma_0}{\Gamma_\Theta R_{\mathrm{op}} A_\Sigma}\right)^2
+  $$
+* Simulate ABBA demod with modulation $f_m=0.3\!-\!0.8~\text{Hz}$, cycle times compatible with lattice clocks.
+* Use three parameter sets (feel free to sweep):
+
+  * **A (max signal)**: $ \dot{\mathcal K}=10^{10}\,\text{bits/s},\ \Delta S_{\text{loss}}\!=5\times10^7\,\text{bits/s},\ T=77\text{K}$
+  * **B (balanced)**: $3\times10^{9},\ 1\text{ pW at }300\text{K}$
+  * **C (conservative)**: $10^{9},\ 10\text{ pW at }300\text{K}$
+* Instability cases: $\sigma_0\in\{1\times10^{-17},\ 3\times10^{-18}\}/\sqrt{\tau}$.
+* **Outputs**:
+
+  * Plot $\tau_\text{req}$ vs $A_\Sigma$ and $R_{\mathrm{op}}$.
+  * Monte-Carlo lock-in traces showing sign flip under loop reversal; null under commuting loop.
+
+### B) **Bridge pencil analysis** (identifiability & floors)
+
+* Implement residual
+
+  $$
+  \mathcal{E}(R)=\left\|\overleftarrow{\prod_e}\exp\{-\varepsilon(N_e-RD_e)\}-I\right\|_{\{\text{spec},F\}}
+  $$
+
+  with ε-continuation.
+* Diagnostics: $\max\|[N_i,N_j]\|_2,\ \max\|[D_i,D_j]\|_2,\ \max\|[N_i,D_j]\|_2$.
+* Report **α** from $\mathcal E_{\min} / (\varepsilon \max\|[N,D]\|)$ and dynamic convergence “to floor”.
+* Include **identical-edge surrogate** and **weighted aggregate** (projected simplex) to show (i) true null when $N\propto D$, (ii) minimized floors otherwise.
+* **Outputs**:
+
+  * Residual landscape with $R^\*$ marked.
+  * ε-sweep lines (slope \~ linear in ε) with commutator floor overlay.
+  * Table: $R^\*$, $\alpha$, SE($R^\*$), commutator norms for spectral & Frobenius.
+
+> Optional: import Tanner’s `bridge_pencil.py` if provided; otherwise re-implement minimal functionality.
+
+### C) **Protocol design** (Θ-only non-commuting loop)
+
+* Specify operational loop in $(\ln r_\*,\theta)$: ABBA order; loop reversal; ensemble swap.
+* **Witness channels**: LO amplitude, polarization leakage, B-field, temperature; record and regress.
+* **Orthogonality tests**:
+
+  * Loop reversal ⇒ CCC term flips sign; most systematics don’t.
+  * Rulers-only / protractors-only commute ⇒ CCC signal $\to 0$.
+  * Entanglement on/off (visibility $V$) ⇒ slope $dA/dV>0$.
+* **Complexity/dissipation engineering**:
+
+  * Keep **local** dissipation ≤ pW near atoms (route heat remotely).
+  * Complexity source: 100–300 qubits at multi-MHz; semantic-neutral unitary sequences.
+* **Outputs**:
+
+  * Timing diagram; parameter sheet; “day-one” lab checklist.
+  * Risk table with mitigations (Stark/Zeeman/thermal/servo bleed).
+
+## 4) Required visuals (publication-grade; SVG/PNG + source notebooks)
+
+1. **Schematic:** 14-D operational manifold with rulers/protractors and Θ-loop.
+2. **Bridge residual landscape** (your style, with $R^\*$ and ε annotated).
+3. **ε-sweep** with commutator floor overlay and α band.
+4. **Time-to-detect curves** for sets A/B/C; highlight 1-day/1-week contours.
+5. **ABBA demod traces** showing sign flip under loop reversal.
+6. **Identical vs heterogeneous edges** panel (exact-null vs commutator floor).
+7. **Weight optimization** panel (weights learned, residual drop).
+8. **One animated 20–30 s explainer** of the modulation + demod idea.
+
+## 5) Data & code structure (agents must produce)
+
+```
+ccc-clock/
+  README.md  # run instructions + theory summary (300–500 words)
+  env.yml / requirements.txt
+  src/
+    metrology.py        # SNR, tau_req, ABBA simulator
+    bridge_pencil.py    # residuals, ε-continuation, diagnostics (or import)
+    weights.py          # projected simplex optimizer
+    jd.py               # (optional) joint diagonalization preconditioner
+  notebooks/
+    01_sensitivity_dashboard.ipynb
+    02_bridge_residual_sweeps.ipynb
+  figs/
+    schematic.svg
+    residual_landscape.png
+    eps_sweep.png
+    tau_vs_area.png
+    abba_traces.png
+    identical_vs_hetero.png
+    weights_optimization.png
+    explainer.mp4
+  paper_assets/
+    two_pager.pdf
+    slides_10pp.pdf
+```
+
+## 6) Two-pager & slides (content checklist)
+
+* **Two-pager** (lab executive brief)
+
+  * Claim + falsifiability + why now.
+  * Single box-eqn: $(\Delta f/f)_{\mathrm{demod}} = \Gamma_\Theta R_{\mathrm{op}} A_\Sigma + \cdots$.
+  * Design: Θ-only non-commuting loop; ABBA; swap; reversal.
+  * Sensitivity table: $\tau_\text{req}$ for A/B/C and two $\sigma_0$.
+  * Systematics & witnesses; orthogonality tests.
+  * What the partner lab needs (hardware, run time).
+* **Slides (10)**: problem → idea → model → sims → protocol → risks → ask.
+
+## 7) Acceptance criteria (hard gates)
+
+* **A1**: Provide numeric $\tau_\text{req}$ under A/B/C showing at least one case ≤ 72 h at $\sigma_0=3\times10^{-18}/\sqrt{\tau}$ and $A_\Sigma$ in feasible range.
+* **A2**: Bridge analysis reports $R^\*$ with SE and α; ε-sweep consistent with a linear floor; either (i) identical-edge exact-null panel or (ii) statement “no null; converged to commutator floor” with diagnostics.
+* **A3**: ABBA traces show sign flip under loop reversal and null in commuting limit.
+* **A4**: Two-pager + slides + figure suite suitable for cold outreach to an optical-clock PI (clarity, aesthetics, and all axes labeled).
+* **A5**: All code runs from a clean environment (README reproducibility steps).
+
+## 8) Guardrails & notes
+
+* Units & gauges: ensure $R_{\mathrm{op}}$ and $\mathcal R_{\mathrm{op}}$ dimensionless; observables invariant under $r_\*\to\lambda r_\*$.
+* Stability: when adding $\|d\omega\|^2$, $\|F\|^2$ terms, keep $b,c>0$ and $|d|<2\sqrt{bc}$.
+* Ratio estimator guard: stabilize denominator $\dot S_e+\dot S_{\text{loss}}$ to avoid blow-ups (signed ε).
+* If bridge residuals use different norms, **state the norm** and relate Frobenius↔spectral via $\|A\|_2 \le \|A\|_F \le \sqrt{\mathrm{rank}(A)}\|A\|_2$.
+
+## 9) Optional: integrate Tanner’s kit (if provided)
+
+* If `bridge_pencil.py` is available, import and reuse; otherwise implement minimal equivalents (generalized eigen, expm product, ε-continuation, commutator diagnostics, weight optimizer, dynamic floor).
+* If `/apps/engine/` is available, wire a **Sensitivity Dashboard** with sliders for $\Gamma_\Theta, A_\Sigma, R_{\mathrm{op}}, \sigma_0, z_\alpha$; produce CSVs for plots.
+
+## 10) Outreach ask (copy for the two-pager footer)
+
+> **Call for collaboration.** We are seeking a partner lab operating dual Sr lattice clocks (or equivalent) to run a 1–2 week Θ-only loop protocol. We provide code, timing sequences, and live analysis. The experiment is falsifiable: detection at the predicted slope or a null result that bounds $\Gamma_\Theta R_{\mathrm{op}}$. Either outcome advances the science.
+
+---
+
+### One-shot command for your orchestrator (paste this as the top-level prompt)
+
+> **Execute the “Mission: CCC Clock Test” brief above. Produce the code repo, figures, two-pager, and slides per sections 2–7. Use the math and acceptance criteria as tests. Prefer spectral norm for identifiability, but include Frobenius comparisons. If Tanner’s engine/bridge files are provided, integrate; otherwise implement minimal equivalents. Prioritize clarity, unit correctness, and aesthetic visuals. Output: a buildable repo and PDFs ready to send to a lab PI.**

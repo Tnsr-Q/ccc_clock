@@ -1,0 +1,58 @@
+
+{
+  "title": "CCC Clock Demonstration System",
+  "description": "A comprehensive demonstration system for Composite Clock Comparison (CCC) using Θ-loop geometry and ABBA protocol for precision metrology applications.",
+  "creators": [
+    {
+      "name": "CCC Clock Development Team",
+      "affiliation": "Research Institution"
+    }
+  ],
+  "keywords": [
+    "atomic clocks",
+    "precision metrology",
+    "composite clock comparison",
+    "ABBA protocol",
+    "theta-loop geometry",
+    "frequency standards",
+    "quantum sensing",
+    "lock-in amplification",
+    "systematic error suppression"
+  ],
+  "license": "MIT",
+  "upload_type": "software",
+  "access_right": "open",
+  "language": "eng",
+  "subjects": [
+    {
+      "term": "Atomic, Molecular and Optical Physics",
+      "identifier": "https://id.loc.gov/authorities/subjects/sh85009003.html",
+      "scheme": "url"
+    },
+    {
+      "term": "Precision Measurement",
+      "identifier": "https://id.loc.gov/authorities/subjects/sh85106463.html", 
+      "scheme": "url"
+    },
+    {
+      "term": "Quantum Metrology",
+      "identifier": "https://id.loc.gov/authorities/subjects/sh2008109526.html",
+      "scheme": "url"
+    }
+  ],
+  "related_identifiers": [
+    {
+      "relation": "isSupplementTo",
+      "identifier": "https://github.com/username/ccc-clock",
+      "resource_type": "software"
+    }
+  ],
+  "version": "1.0.0",
+  "publication_date": "2025-09-04",
+  "notes": "This software package provides a complete demonstration system for Composite Clock Comparison (CCC) techniques, including theoretical models, simulation tools, data analysis pipelines, and visualization components. The system implements the Θ-loop geometry with ABBA protocol for systematic error suppression in precision frequency comparisons.",
+  "references": [
+    "Composite Clock Comparison Techniques in Precision Metrology",
+    "ABBA Protocol for Systematic Error Suppression",
+    "Θ-Loop Geometry in Atomic Clock Networks"
+  ]
+}

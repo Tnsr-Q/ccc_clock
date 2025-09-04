@@ -1,0 +1,24 @@
+
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+type: software
+title: "CCC Clock Demonstration System"
+abstract: "A complete implementation of the Computational Complexity Cosmology (CCC) Clock Demonstration System for detecting information-induced time dilation effects in co-located optical atomic clocks."
+authors:
+  - family-names: "CCC Clock Research Team"
+    given-names: ""
+    orcid: ""
+repository-code: "https://github.com/username/ccc-clock"
+url: "https://username.github.io/ccc-clock/"
+version: "1.0.0"
+date-released: "2025-09-04"
+doi: "10.5281/zenodo.XXXXXX"
+license: MIT
+keywords:
+  - "optical clocks"
+  - "computational complexity"
+  - "spacetime curvature"
+  - "precision metrology"
+  - "fundamental physics"
+  - "quantum gravity"
+  - "information theory"

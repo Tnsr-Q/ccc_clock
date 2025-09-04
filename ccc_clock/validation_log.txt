@@ -1,0 +1,26 @@
+============================= test session starts ==============================
+platform linux -- Python 3.11.6, pytest-8.4.1, pluggy-1.6.0 -- /home/ubuntu/ccc_clock/.venv/bin/python
+cachedir: .pytest_cache
+rootdir: /home/ubuntu/ccc_clock
+plugins: anyio-4.10.0, cov-6.2.1
+collecting ... collected 6 items
+
+tests/test_acceptance.py::TestAcceptanceCriteria::test_a1_time_to_detect_criterion PASSED [ 16%]
+tests/test_acceptance.py::TestAcceptanceCriteria::test_a2_bridge_analysis_criterion PASSED [ 33%]
+tests/test_acceptance.py::TestAcceptanceCriteria::test_a3_sign_flip_criterion PASSED [ 50%]
+tests/test_acceptance.py::TestAcceptanceCriteria::test_a4_documentation_criterion PASSED [ 66%]
+tests/test_acceptance.py::TestAcceptanceCriteria::test_a5_reproducibility_criterion PASSED [ 83%]
+tests/test_acceptance.py::TestAcceptanceCriteria::test_overall_acceptance_summary PASSED [100%]
+
+=============================== warnings summary ===============================
+tests/test_acceptance.py::TestAcceptanceCriteria::test_a1_time_to_detect_criterion
+tests/test_acceptance.py::TestAcceptanceCriteria::test_a2_bridge_analysis_criterion
+tests/test_acceptance.py::TestAcceptanceCriteria::test_a3_sign_flip_criterion
+tests/test_acceptance.py::TestAcceptanceCriteria::test_a4_documentation_criterion
+tests/test_acceptance.py::TestAcceptanceCriteria::test_a5_reproducibility_criterion
+tests/test_acceptance.py::TestAcceptanceCriteria::test_overall_acceptance_summary
+  /home/ubuntu/ccc_clock/tests/../src/protocol.py:146: UserWarning: Modulation frequency may violate Nyquist criterion
+    warnings.warn("Modulation frequency may violate Nyquist criterion")
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+======================== 6 passed, 6 warnings in 4.32s =========================
