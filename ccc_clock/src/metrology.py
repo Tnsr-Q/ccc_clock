@@ -16,11 +16,7 @@ import warnings
 from dataclasses import dataclass
 from typing import Dict, List, Optional, Tuple
 
-import matplotlib.pyplot as plt
 import numpy as np
-import plotly.express as px
-import plotly.graph_objects as go
-from plotly.subplots import make_subplots
 
 
 @dataclass
@@ -465,9 +461,9 @@ if __name__ == "__main__":
         print(f"    τ_req = {tau_req/3600:.1f} hours (A_Σ={A_Sigma:.0e})")
 
         if tau_req <= 72 * 3600:
-            print(f"    ✅ A1 criterion met!")
+            print("    ✅ A1 criterion met!")
         else:
-            print(f"    ❌ A1 criterion not met (need larger A_Σ or better params)")
+            print("    ❌ A1 criterion not met (need larger A_Σ or better params)")
 
     # Test ABBA simulator
     print("\n🔄 Testing ABBA Simulator:")

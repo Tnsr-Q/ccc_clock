@@ -106,17 +106,7 @@
         <span class="n">local_se</span><span class="p">,</span>
         <span class="n">make_random_edges</span><span class="p">,</span>
     <span class="p">)</span>
-    <span class="kn">from</span> <span class="nn">bridge_null_utils</span> <span class="kn">import</span> <span class="p">(</span>
-        <span class="n">apply_joint_diag_to_edges</span><span class="p">,</span>
-        <span class="n">compute_proportionality_metrics</span><span class="p">,</span>
-        <span class="n">joint_diag</span><span class="p">,</span>
-    <span class="p">)</span>
-    <span class="kn">from</span> <span class="nn">experiments_bridge_null</span> <span class="kn">import</span> <span class="p">(</span>
-        <span class="n">bridge_null_spectral</span><span class="p">,</span>
-        <span class="n">create_identical_copies</span><span class="p">,</span>
-        <span class="n">cycle_residual_spec</span><span class="p">,</span>
-        <span class="n">optimize_weights</span><span class="p">,</span>
-    <span class="p">)</span>
+    <span class="kn">from</span> <span class="nn">experiments_bridge_null</span> <span class="kn">import</span> <span class="n">bridge_null_spectral</span>
 
     <span class="n">BRIDGE_TOOLS_AVAILABLE</span> <span class="o">=</span> <span class="kc">True</span>
 <span class="k">except</span> <span class="ne">ImportError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>

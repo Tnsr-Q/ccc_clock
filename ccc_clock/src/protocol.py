@@ -18,7 +18,6 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Callable, Dict, List, Optional, Tuple
 
-import matplotlib.pyplot as plt
 import numpy as np
 
 

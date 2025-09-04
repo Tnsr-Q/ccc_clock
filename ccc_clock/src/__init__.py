@@ -11,13 +11,28 @@ This package provides:
 - Integration with existing bridge_null analysis tools
 """
 
-from .bridge_ccc import (CCCBridgeAnalyzer, compute_residual_with_eps,
-                         enhanced_commutator_diagnostics, epsilon_continuation)
-from .metrology import (PARAMETER_SETS, ABBASimulator, CCCMetrology,
-                        ParameterSet, compute_operational_curvature,
-                        compute_snr, compute_time_to_detect)
-from .protocol import (ABBASequence, CCCProtocol, OrthogonalityTest, ThetaLoop,
-                       WitnessChannel)
+from .bridge_ccc import (
+    CCCBridgeAnalyzer,
+    compute_residual_with_eps,
+    enhanced_commutator_diagnostics,
+    epsilon_continuation,
+)
+from .metrology import (
+    PARAMETER_SETS,
+    ABBASimulator,
+    CCCMetrology,
+    ParameterSet,
+    compute_operational_curvature,
+    compute_snr,
+    compute_time_to_detect,
+)
+from .protocol import (
+    ABBASequence,
+    CCCProtocol,
+    OrthogonalityTest,
+    ThetaLoop,
+    WitnessChannel,
+)
 
 __version__ = "1.0.0"
 __author__ = "CCC Clock Team"
@@ -40,7 +55,8 @@ def validate_acceptance_criteria():
             results.append((name, sigma_0, tau_req))
             if tau_req <= 72 * 3600:  # 72 hours in seconds
                 print(
-                    f"✅ A1: {name} with σ₀={sigma_0:.0e}/√τ gives τ_req={tau_req/3600:.1f}h ≤ 72h"
+                    f"✅ A1: {name} with σ₀={sigma_0:.0e}/√τ gives "
+                    f"τ_req={tau_req/3600:.1f}h ≤ 72h"
                 )
                 return True
 

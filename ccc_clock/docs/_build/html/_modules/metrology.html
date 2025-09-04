@@ -92,11 +92,7 @@
 <span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">dataclass</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span>
 
-<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">plotly.express</span> <span class="k">as</span> <span class="nn">px</span>
-<span class="kn">import</span> <span class="nn">plotly.graph_objects</span> <span class="k">as</span> <span class="nn">go</span>
-<span class="kn">from</span> <span class="nn">plotly.subplots</span> <span class="kn">import</span> <span class="n">make_subplots</span>
 
 
 <div class="viewcode-block" id="ParameterSet">
@@ -589,9 +585,9 @@
         <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;    τ_req = </span><span class="si">{</span><span class="n">tau_req</span><span class="o">/</span><span class="mi">3600</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2"> hours (A_Σ=</span><span class="si">{</span><span class="n">A_Sigma</span><span class="si">:</span><span class="s2">.0e</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">tau_req</span> <span class="o">&lt;=</span> <span class="mi">72</span> <span class="o">*</span> <span class="mi">3600</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;    ✅ A1 criterion met!&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;    ✅ A1 criterion met!&quot;</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;    ❌ A1 criterion not met (need larger A_Σ or better params)&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;    ❌ A1 criterion not met (need larger A_Σ or better params)&quot;</span><span class="p">)</span>
 
     <span class="c1"># Test ABBA simulator</span>
     <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">🔄 Testing ABBA Simulator:&quot;</span><span class="p">)</span>
