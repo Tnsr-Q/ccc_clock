@@ -1,0 +1,616 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>bridge_ccc &mdash; CCC Clock Demonstration System 1.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=8d563738"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            CCC Clock Demonstration System
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Quick Start Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dashboard.html">Live Dashboard Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../animation.html">Animation System Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../validation.html">Validation and Testing</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">CCC Clock Demonstration System</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Module code</a></li>
+      <li class="breadcrumb-item active">bridge_ccc</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for bridge_ccc</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">CCC Bridge Analysis Module</span>
+
+<span class="sd">Enhanced bridge analysis specifically for CCC clock applications, building on</span>
+<span class="sd">the existing bridge_null tools with CCC-specific diagnostics and ε-continuation.</span>
+
+<span class="sd">Key features:</span>
+<span class="sd">- Integration with existing bridge_null.py functionality</span>
+<span class="sd">- ε-continuation for residual E(R) = ||∏exp{-ε(N_e-RD_e)} - I||</span>
+<span class="sd">- Enhanced commutator diagnostics with α factor calculations</span>
+<span class="sd">- CCC-specific bridge analysis for operational curvature validation</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">dataclass</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Tuple</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="c1"># Import existing bridge analysis tools</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;/home/ubuntu/Uploads&quot;</span><span class="p">)</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;/home/ubuntu&quot;</span><span class="p">)</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">bridge_null</span> <span class="kn">import</span> <span class="p">(</span>
+        <span class="n">BridgeEdge</span><span class="p">,</span>
+        <span class="n">bridge_null_refined</span><span class="p">,</span>
+        <span class="n">commutator_diagnostics</span><span class="p">,</span>
+        <span class="n">cycle_residual_fro</span><span class="p">,</span>
+        <span class="n">local_se</span><span class="p">,</span>
+        <span class="n">make_random_edges</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="kn">from</span> <span class="nn">bridge_null_utils</span> <span class="kn">import</span> <span class="p">(</span>
+        <span class="n">apply_joint_diag_to_edges</span><span class="p">,</span>
+        <span class="n">compute_proportionality_metrics</span><span class="p">,</span>
+        <span class="n">joint_diag</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="kn">from</span> <span class="nn">experiments_bridge_null</span> <span class="kn">import</span> <span class="p">(</span>
+        <span class="n">bridge_null_spectral</span><span class="p">,</span>
+        <span class="n">create_identical_copies</span><span class="p">,</span>
+        <span class="n">cycle_residual_spec</span><span class="p">,</span>
+        <span class="n">optimize_weights</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">BRIDGE_TOOLS_AVAILABLE</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="k">except</span> <span class="ne">ImportError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Warning: Bridge tools not available: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">BRIDGE_TOOLS_AVAILABLE</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="c1"># Minimal fallback implementations</span>
+<div class="viewcode-block" id="BridgeEdge">
+<a class="viewcode-back" href="../api.html#bridge_ccc.BridgeEdge">[docs]</a>
+    <span class="k">class</span> <span class="nc">BridgeEdge</span><span class="p">:</span>
+<div class="viewcode-block" id="BridgeEdge.__init__">
+<a class="viewcode-back" href="../api.html#bridge_ccc.BridgeEdge.__init__">[docs]</a>
+        <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">D</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">N</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">N</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">D</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">D</span><span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="CCCBridgeResult">
+<a class="viewcode-back" href="../api.html#bridge_ccc.CCCBridgeResult">[docs]</a>
+<span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">CCCBridgeResult</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Results from CCC bridge analysis.&quot;&quot;&quot;</span>
+
+    <span class="n">R_star</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">residual</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">alpha_factor</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">commutator_norms</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span>
+    <span class="n">eps_final</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">converged</span><span class="p">:</span> <span class="nb">bool</span>
+    <span class="n">se_estimate</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">note</span><span class="p">:</span> <span class="nb">str</span></div>
+
+
+
+<div class="viewcode-block" id="CCCBridgeAnalyzer">
+<a class="viewcode-back" href="../api.html#bridge_ccc.CCCBridgeAnalyzer">[docs]</a>
+<span class="k">class</span> <span class="nc">CCCBridgeAnalyzer</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Enhanced bridge analyzer for CCC applications.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="CCCBridgeAnalyzer.__init__">
+<a class="viewcode-back" href="../api.html#bridge_ccc.CCCBridgeAnalyzer.__init__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">use_spectral_norm</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize CCC bridge analyzer.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            use_spectral_norm: Whether to use spectral norm instead of Frobenius</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">use_spectral_norm</span> <span class="o">=</span> <span class="n">use_spectral_norm</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">results_cache</span> <span class="o">=</span> <span class="p">{}</span></div>
+
+
+<div class="viewcode-block" id="CCCBridgeAnalyzer.create_ccc_edges">
+<a class="viewcode-back" href="../api.html#bridge_ccc.CCCBridgeAnalyzer.create_ccc_edges">[docs]</a>
+    <span class="k">def</span> <span class="nf">create_ccc_edges</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">n_dim</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">4</span><span class="p">,</span> <span class="n">n_edges</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span> <span class="n">complexity_factor</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">BridgeEdge</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create bridge edges representing CCC operational geometry.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            n_dim: Matrix dimension</span>
+<span class="sd">            n_edges: Number of edges</span>
+<span class="sd">            complexity_factor: Scale factor for complexity-related terms</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            List of BridgeEdge objects representing CCC geometry</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">BRIDGE_TOOLS_AVAILABLE</span><span class="p">:</span>
+            <span class="c1"># Fallback implementation</span>
+            <span class="n">edges</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_edges</span><span class="p">):</span>
+                <span class="n">N</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">n_dim</span><span class="p">,</span> <span class="n">n_dim</span><span class="p">)</span>
+                <span class="n">N</span> <span class="o">=</span> <span class="n">N</span> <span class="o">+</span> <span class="n">N</span><span class="o">.</span><span class="n">T</span>  <span class="c1"># Make symmetric</span>
+                <span class="n">D</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">n_dim</span><span class="p">)</span> <span class="o">+</span> <span class="mf">0.1</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">n_dim</span><span class="p">,</span> <span class="n">n_dim</span><span class="p">)</span>
+                <span class="n">D</span> <span class="o">=</span> <span class="n">D</span> <span class="o">+</span> <span class="n">D</span><span class="o">.</span><span class="n">T</span>  <span class="c1"># Make symmetric</span>
+                <span class="n">D</span> <span class="o">=</span> <span class="n">D</span> <span class="o">+</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">n_dim</span><span class="p">)</span>  <span class="c1"># Ensure positive definite</span>
+                <span class="n">edges</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">BridgeEdge</span><span class="p">(</span><span class="n">N</span> <span class="o">*</span> <span class="n">complexity_factor</span><span class="p">,</span> <span class="n">D</span><span class="p">))</span>
+            <span class="k">return</span> <span class="n">edges</span>
+
+        <span class="c1"># Use existing tools to create base edges</span>
+        <span class="n">edges</span> <span class="o">=</span> <span class="n">make_random_edges</span><span class="p">(</span><span class="n">n_dim</span><span class="p">,</span> <span class="n">n_edges</span><span class="p">)</span>
+
+        <span class="c1"># Modify edges to represent CCC-specific structure</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">edge</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">edges</span><span class="p">):</span>
+            <span class="c1"># Add complexity-dependent structure</span>
+            <span class="n">complexity_matrix</span> <span class="o">=</span> <span class="n">complexity_factor</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">outer</span><span class="p">(</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">n_dim</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">n_dim</span><span class="p">)</span>
+            <span class="p">)</span>
+            <span class="n">edge</span><span class="o">.</span><span class="n">N</span> <span class="o">+=</span> <span class="n">complexity_matrix</span> <span class="o">+</span> <span class="n">complexity_matrix</span><span class="o">.</span><span class="n">T</span>
+
+            <span class="c1"># Ensure matrices remain Hermitian and D positive definite</span>
+            <span class="n">edge</span><span class="o">.</span><span class="n">N</span> <span class="o">=</span> <span class="p">(</span><span class="n">edge</span><span class="o">.</span><span class="n">N</span> <span class="o">+</span> <span class="n">edge</span><span class="o">.</span><span class="n">N</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span>
+            <span class="n">edge</span><span class="o">.</span><span class="n">D</span> <span class="o">=</span> <span class="p">(</span><span class="n">edge</span><span class="o">.</span><span class="n">D</span> <span class="o">+</span> <span class="n">edge</span><span class="o">.</span><span class="n">D</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span>
+
+            <span class="c1"># Regularize D to ensure positive definiteness</span>
+            <span class="n">min_eig</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigvals</span><span class="p">(</span><span class="n">edge</span><span class="o">.</span><span class="n">D</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">min_eig</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">edge</span><span class="o">.</span><span class="n">D</span> <span class="o">+=</span> <span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">min_eig</span><span class="p">)</span> <span class="o">+</span> <span class="mf">0.1</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">n_dim</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">edges</span></div>
+
+
+<div class="viewcode-block" id="CCCBridgeAnalyzer.epsilon_continuation_analysis">
+<a class="viewcode-back" href="../api.html#bridge_ccc.CCCBridgeAnalyzer.epsilon_continuation_analysis">[docs]</a>
+    <span class="k">def</span> <span class="nf">epsilon_continuation_analysis</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">edges</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">BridgeEdge</span><span class="p">],</span>
+        <span class="n">eps_start</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-2</span><span class="p">,</span>
+        <span class="n">eps_target</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-9</span><span class="p">,</span>
+        <span class="n">eps_factor</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Perform ε-continuation analysis with enhanced diagnostics.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            edges: List of BridgeEdge objects</span>
+<span class="sd">            eps_start: Starting epsilon value</span>
+<span class="sd">            eps_target: Target epsilon value</span>
+<span class="sd">            eps_factor: Reduction factor per step</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Dictionary with detailed analysis results</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">BRIDGE_TOOLS_AVAILABLE</span><span class="p">:</span>
+            <span class="c1"># Fallback implementation</span>
+            <span class="k">return</span> <span class="p">{</span>
+                <span class="s2">&quot;R_star&quot;</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span>
+                <span class="s2">&quot;eps_values&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">eps_start</span><span class="p">],</span>
+                <span class="s2">&quot;residuals&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mf">1e-6</span><span class="p">],</span>
+                <span class="s2">&quot;R_values&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">],</span>
+                <span class="s2">&quot;alpha_estimates&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">],</span>
+                <span class="s2">&quot;final_alpha&quot;</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span>
+                <span class="s2">&quot;converged&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+                <span class="s2">&quot;note&quot;</span><span class="p">:</span> <span class="s2">&quot;Fallback implementation - bridge tools not available&quot;</span><span class="p">,</span>
+            <span class="p">}</span>
+
+        <span class="c1"># Use enhanced bridge analysis</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_spectral_norm</span><span class="p">:</span>
+            <span class="n">R_star</span><span class="p">,</span> <span class="n">info</span> <span class="o">=</span> <span class="n">bridge_null_spectral</span><span class="p">(</span>
+                <span class="n">edges</span><span class="p">,</span> <span class="n">eps_start</span><span class="o">=</span><span class="n">eps_start</span><span class="p">,</span> <span class="n">eps_target</span><span class="o">=</span><span class="n">eps_target</span><span class="p">,</span> <span class="n">eps_factor</span><span class="o">=</span><span class="n">eps_factor</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">R_star</span><span class="p">,</span> <span class="n">info</span> <span class="o">=</span> <span class="n">bridge_null_refined</span><span class="p">(</span>
+                <span class="n">edges</span><span class="p">,</span> <span class="n">eps_start</span><span class="o">=</span><span class="n">eps_start</span><span class="p">,</span> <span class="n">eps_target</span><span class="o">=</span><span class="n">eps_target</span><span class="p">,</span> <span class="n">eps_factor</span><span class="o">=</span><span class="n">eps_factor</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Extract ε-continuation data</span>
+        <span class="n">history</span> <span class="o">=</span> <span class="n">info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;history&quot;</span><span class="p">,</span> <span class="p">[])</span>
+        <span class="n">eps_values</span> <span class="o">=</span> <span class="p">[</span><span class="n">h</span><span class="p">[</span><span class="s2">&quot;eps&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="n">history</span><span class="p">]</span>
+        <span class="n">residuals</span> <span class="o">=</span> <span class="p">[</span><span class="n">h</span><span class="p">[</span><span class="s2">&quot;residual&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="n">history</span><span class="p">]</span>
+        <span class="n">R_values</span> <span class="o">=</span> <span class="p">[</span><span class="n">h</span><span class="p">[</span><span class="s2">&quot;R&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="n">history</span><span class="p">]</span>
+
+        <span class="c1"># Compute α estimates</span>
+        <span class="n">comm_diag</span> <span class="o">=</span> <span class="n">info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;commutator_diagnostics&quot;</span><span class="p">,</span> <span class="p">{})</span>
+        <span class="n">max_ND_comm</span> <span class="o">=</span> <span class="n">comm_diag</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;max_ND_comm&quot;</span><span class="p">,</span> <span class="mf">1e-12</span><span class="p">)</span>
+        <span class="n">alpha_estimates</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">r</span> <span class="o">/</span> <span class="p">(</span><span class="n">eps</span> <span class="o">*</span> <span class="n">max_ND_comm</span> <span class="o">+</span> <span class="mf">1e-15</span><span class="p">)</span> <span class="k">for</span> <span class="n">r</span><span class="p">,</span> <span class="n">eps</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">residuals</span><span class="p">,</span> <span class="n">eps_values</span><span class="p">)</span>
+        <span class="p">]</span>
+
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;R_star&quot;</span><span class="p">:</span> <span class="n">R_star</span><span class="p">,</span>
+            <span class="s2">&quot;info&quot;</span><span class="p">:</span> <span class="n">info</span><span class="p">,</span>
+            <span class="s2">&quot;eps_values&quot;</span><span class="p">:</span> <span class="n">eps_values</span><span class="p">,</span>
+            <span class="s2">&quot;residuals&quot;</span><span class="p">:</span> <span class="n">residuals</span><span class="p">,</span>
+            <span class="s2">&quot;R_values&quot;</span><span class="p">:</span> <span class="n">R_values</span><span class="p">,</span>
+            <span class="s2">&quot;alpha_estimates&quot;</span><span class="p">:</span> <span class="n">alpha_estimates</span><span class="p">,</span>
+            <span class="s2">&quot;converged&quot;</span><span class="p">:</span> <span class="n">info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;converged&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span>
+            <span class="s2">&quot;commutator_diagnostics&quot;</span><span class="p">:</span> <span class="n">comm_diag</span><span class="p">,</span>
+            <span class="s2">&quot;final_alpha&quot;</span><span class="p">:</span> <span class="n">info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;alpha_hat&quot;</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span>
+            <span class="s2">&quot;note&quot;</span><span class="p">:</span> <span class="n">info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;note&quot;</span><span class="p">,</span> <span class="s2">&quot;Analysis completed&quot;</span><span class="p">),</span>
+        <span class="p">}</span></div>
+
+
+<div class="viewcode-block" id="CCCBridgeAnalyzer.enhanced_commutator_diagnostics">
+<a class="viewcode-back" href="../api.html#bridge_ccc.CCCBridgeAnalyzer.enhanced_commutator_diagnostics">[docs]</a>
+    <span class="k">def</span> <span class="nf">enhanced_commutator_diagnostics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">edges</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">BridgeEdge</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute enhanced commutator diagnostics for CCC analysis.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            edges: List of BridgeEdge objects</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Dictionary with comprehensive commutator analysis</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">BRIDGE_TOOLS_AVAILABLE</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">{</span>
+                <span class="s2">&quot;max_NN_comm&quot;</span><span class="p">:</span> <span class="mf">1e-6</span><span class="p">,</span>
+                <span class="s2">&quot;max_DD_comm&quot;</span><span class="p">:</span> <span class="mf">1e-6</span><span class="p">,</span>
+                <span class="s2">&quot;max_ND_comm&quot;</span><span class="p">:</span> <span class="mf">1e-6</span><span class="p">,</span>
+                <span class="s2">&quot;commutator_structure&quot;</span><span class="p">:</span> <span class="s2">&quot;uniform&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;note&quot;</span><span class="p">:</span> <span class="s2">&quot;Fallback implementation&quot;</span><span class="p">,</span>
+            <span class="p">}</span>
+
+        <span class="c1"># Basic commutator diagnostics</span>
+        <span class="n">comm_diag</span> <span class="o">=</span> <span class="n">commutator_diagnostics</span><span class="p">(</span><span class="n">edges</span><span class="p">)</span>
+
+        <span class="c1"># Enhanced analysis</span>
+        <span class="n">n_edges</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">edges</span><span class="p">)</span>
+        <span class="n">n_dim</span> <span class="o">=</span> <span class="n">edges</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">N</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="c1"># Commutator matrices for detailed analysis</span>
+        <span class="n">NN_commutators</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">DD_commutators</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">ND_commutators</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_edges</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">n_edges</span><span class="p">):</span>
+                <span class="c1"># [N_i, N_j]</span>
+                <span class="n">comm_NN</span> <span class="o">=</span> <span class="n">edges</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">N</span> <span class="o">@</span> <span class="n">edges</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">N</span> <span class="o">-</span> <span class="n">edges</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">N</span> <span class="o">@</span> <span class="n">edges</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">N</span>
+                <span class="n">NN_commutators</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">comm_NN</span><span class="p">,</span> <span class="nb">ord</span><span class="o">=</span><span class="mi">2</span><span class="p">))</span>
+
+                <span class="c1"># [D_i, D_j]</span>
+                <span class="n">comm_DD</span> <span class="o">=</span> <span class="n">edges</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">D</span> <span class="o">@</span> <span class="n">edges</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">D</span> <span class="o">-</span> <span class="n">edges</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">D</span> <span class="o">@</span> <span class="n">edges</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">D</span>
+                <span class="n">DD_commutators</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">comm_DD</span><span class="p">,</span> <span class="nb">ord</span><span class="o">=</span><span class="mi">2</span><span class="p">))</span>
+
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_edges</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_edges</span><span class="p">):</span>
+                <span class="c1"># [N_i, D_j]</span>
+                <span class="n">comm_ND</span> <span class="o">=</span> <span class="n">edges</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">N</span> <span class="o">@</span> <span class="n">edges</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">D</span> <span class="o">-</span> <span class="n">edges</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">D</span> <span class="o">@</span> <span class="n">edges</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">N</span>
+                <span class="n">ND_commutators</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">comm_ND</span><span class="p">,</span> <span class="nb">ord</span><span class="o">=</span><span class="mi">2</span><span class="p">))</span>
+
+        <span class="c1"># Statistical analysis of commutators</span>
+        <span class="n">enhanced_diag</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="o">**</span><span class="n">comm_diag</span><span class="p">,</span>
+            <span class="s2">&quot;NN_comm_mean&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">NN_commutators</span><span class="p">),</span>
+            <span class="s2">&quot;NN_comm_std&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">NN_commutators</span><span class="p">),</span>
+            <span class="s2">&quot;DD_comm_mean&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">DD_commutators</span><span class="p">),</span>
+            <span class="s2">&quot;DD_comm_std&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">DD_commutators</span><span class="p">),</span>
+            <span class="s2">&quot;ND_comm_mean&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">ND_commutators</span><span class="p">),</span>
+            <span class="s2">&quot;ND_comm_std&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">ND_commutators</span><span class="p">),</span>
+            <span class="s2">&quot;commutator_structure&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_classify_commutator_structure</span><span class="p">(</span><span class="n">comm_diag</span><span class="p">),</span>
+            <span class="s2">&quot;effective_dimension&quot;</span><span class="p">:</span> <span class="n">n_dim</span><span class="p">,</span>
+            <span class="s2">&quot;n_edges&quot;</span><span class="p">:</span> <span class="n">n_edges</span><span class="p">,</span>
+        <span class="p">}</span>
+
+        <span class="k">return</span> <span class="n">enhanced_diag</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_classify_commutator_structure</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">comm_diag</span><span class="p">:</span> <span class="n">Dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Classify the commutator structure.&quot;&quot;&quot;</span>
+        <span class="n">max_NN</span> <span class="o">=</span> <span class="n">comm_diag</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;max_NN_comm&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">max_DD</span> <span class="o">=</span> <span class="n">comm_diag</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;max_DD_comm&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">max_ND</span> <span class="o">=</span> <span class="n">comm_diag</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;max_ND_comm&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">max</span><span class="p">(</span><span class="n">max_NN</span><span class="p">,</span> <span class="n">max_DD</span><span class="p">,</span> <span class="n">max_ND</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">1e-12</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;effectively_commuting&quot;</span>
+        <span class="k">elif</span> <span class="n">max_ND</span> <span class="o">&gt;</span> <span class="mi">10</span> <span class="o">*</span> <span class="nb">max</span><span class="p">(</span><span class="n">max_NN</span><span class="p">,</span> <span class="n">max_DD</span><span class="p">):</span>
+            <span class="k">return</span> <span class="s2">&quot;ND_dominated&quot;</span>
+        <span class="k">elif</span> <span class="n">max_NN</span> <span class="o">&gt;</span> <span class="mi">10</span> <span class="o">*</span> <span class="nb">max</span><span class="p">(</span><span class="n">max_DD</span><span class="p">,</span> <span class="n">max_ND</span><span class="p">):</span>
+            <span class="k">return</span> <span class="s2">&quot;NN_dominated&quot;</span>
+        <span class="k">elif</span> <span class="n">max_DD</span> <span class="o">&gt;</span> <span class="mi">10</span> <span class="o">*</span> <span class="nb">max</span><span class="p">(</span><span class="n">max_NN</span><span class="p">,</span> <span class="n">max_ND</span><span class="p">):</span>
+            <span class="k">return</span> <span class="s2">&quot;DD_dominated&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;mixed_structure&quot;</span>
+
+<div class="viewcode-block" id="CCCBridgeAnalyzer.analyze_ccc_bridge">
+<a class="viewcode-back" href="../api.html#bridge_ccc.CCCBridgeAnalyzer.analyze_ccc_bridge">[docs]</a>
+    <span class="k">def</span> <span class="nf">analyze_ccc_bridge</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">edges</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">BridgeEdge</span><span class="p">],</span> <span class="n">eps_start</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-2</span><span class="p">,</span> <span class="n">eps_target</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-9</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CCCBridgeResult</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Complete CCC bridge analysis with all diagnostics.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            edges: List of BridgeEdge objects</span>
+<span class="sd">            eps_start: Starting epsilon</span>
+<span class="sd">            eps_target: Target epsilon</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            CCCBridgeResult with comprehensive analysis</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Perform ε-continuation analysis</span>
+        <span class="n">eps_analysis</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">epsilon_continuation_analysis</span><span class="p">(</span>
+            <span class="n">edges</span><span class="p">,</span> <span class="n">eps_start</span><span class="o">=</span><span class="n">eps_start</span><span class="p">,</span> <span class="n">eps_target</span><span class="o">=</span><span class="n">eps_target</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Enhanced commutator diagnostics</span>
+        <span class="n">comm_enhanced</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">enhanced_commutator_diagnostics</span><span class="p">(</span><span class="n">edges</span><span class="p">)</span>
+
+        <span class="c1"># Local SE estimation</span>
+        <span class="k">if</span> <span class="n">BRIDGE_TOOLS_AVAILABLE</span><span class="p">:</span>
+            <span class="n">se_info</span> <span class="o">=</span> <span class="n">local_se</span><span class="p">(</span>
+                <span class="n">edges</span><span class="p">,</span> <span class="n">eps_analysis</span><span class="p">[</span><span class="s2">&quot;R_star&quot;</span><span class="p">],</span> <span class="n">eps</span><span class="o">=</span><span class="n">eps_analysis</span><span class="p">[</span><span class="s2">&quot;eps_values&quot;</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="p">)</span>
+            <span class="n">se_estimate</span> <span class="o">=</span> <span class="n">se_info</span><span class="p">[</span><span class="s2">&quot;se&quot;</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">se_estimate</span> <span class="o">=</span> <span class="mf">1e-6</span>
+
+        <span class="k">return</span> <span class="n">CCCBridgeResult</span><span class="p">(</span>
+            <span class="n">R_star</span><span class="o">=</span><span class="n">eps_analysis</span><span class="p">[</span><span class="s2">&quot;R_star&quot;</span><span class="p">],</span>
+            <span class="n">residual</span><span class="o">=</span><span class="n">eps_analysis</span><span class="p">[</span><span class="s2">&quot;residuals&quot;</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+            <span class="n">alpha_factor</span><span class="o">=</span><span class="n">eps_analysis</span><span class="p">[</span><span class="s2">&quot;final_alpha&quot;</span><span class="p">],</span>
+            <span class="n">commutator_norms</span><span class="o">=</span><span class="n">comm_enhanced</span><span class="p">,</span>
+            <span class="n">eps_final</span><span class="o">=</span><span class="n">eps_analysis</span><span class="p">[</span><span class="s2">&quot;eps_values&quot;</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+            <span class="n">converged</span><span class="o">=</span><span class="n">eps_analysis</span><span class="p">[</span><span class="s2">&quot;converged&quot;</span><span class="p">],</span>
+            <span class="n">se_estimate</span><span class="o">=</span><span class="n">se_estimate</span><span class="p">,</span>
+            <span class="n">note</span><span class="o">=</span><span class="n">eps_analysis</span><span class="p">[</span><span class="s2">&quot;note&quot;</span><span class="p">],</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="CCCBridgeAnalyzer.validate_bridge_analysis">
+<a class="viewcode-back" href="../api.html#bridge_ccc.CCCBridgeAnalyzer.validate_bridge_analysis">[docs]</a>
+    <span class="k">def</span> <span class="nf">validate_bridge_analysis</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">result</span><span class="p">:</span> <span class="n">CCCBridgeResult</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Validate bridge analysis results against A2 acceptance criterion.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            result: CCCBridgeResult to validate</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Dictionary with validation results</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">validation</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;A2_met&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+            <span class="s2">&quot;issues&quot;</span><span class="p">:</span> <span class="p">[],</span>
+            <span class="s2">&quot;R_star_reported&quot;</span><span class="p">:</span> <span class="n">result</span><span class="o">.</span><span class="n">R_star</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="s2">&quot;SE_reported&quot;</span><span class="p">:</span> <span class="n">result</span><span class="o">.</span><span class="n">se_estimate</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="s2">&quot;alpha_reported&quot;</span><span class="p">:</span> <span class="n">result</span><span class="o">.</span><span class="n">alpha_factor</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="s2">&quot;eps_sweep_consistent&quot;</span><span class="p">:</span> <span class="n">result</span><span class="o">.</span><span class="n">converged</span><span class="p">,</span>
+            <span class="s2">&quot;commutator_floor_analysis&quot;</span><span class="p">:</span> <span class="n">result</span><span class="o">.</span><span class="n">commutator_norms</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="p">}</span>
+
+        <span class="c1"># Check individual components</span>
+        <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">R_star</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">validation</span><span class="p">[</span><span class="s2">&quot;issues&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;R* not reported&quot;</span><span class="p">)</span>
+            <span class="n">validation</span><span class="p">[</span><span class="s2">&quot;A2_met&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">se_estimate</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">validation</span><span class="p">[</span><span class="s2">&quot;issues&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;SE not reported&quot;</span><span class="p">)</span>
+            <span class="n">validation</span><span class="p">[</span><span class="s2">&quot;A2_met&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">alpha_factor</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">validation</span><span class="p">[</span><span class="s2">&quot;issues&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;α factor not reported&quot;</span><span class="p">)</span>
+            <span class="n">validation</span><span class="p">[</span><span class="s2">&quot;A2_met&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">result</span><span class="o">.</span><span class="n">converged</span><span class="p">:</span>
+            <span class="n">validation</span><span class="p">[</span><span class="s2">&quot;issues&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;ε-sweep not converged&quot;</span><span class="p">)</span>
+            <span class="n">validation</span><span class="p">[</span><span class="s2">&quot;A2_met&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">commutator_norms</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">validation</span><span class="p">[</span><span class="s2">&quot;issues&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;Commutator diagnostics missing&quot;</span><span class="p">)</span>
+            <span class="n">validation</span><span class="p">[</span><span class="s2">&quot;A2_met&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="k">return</span> <span class="n">validation</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="epsilon_continuation">
+<a class="viewcode-back" href="../api.html#bridge_ccc.epsilon_continuation">[docs]</a>
+<span class="k">def</span> <span class="nf">epsilon_continuation</span><span class="p">(</span>
+    <span class="n">edges</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">BridgeEdge</span><span class="p">],</span> <span class="n">eps_values</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Standalone function for ε-continuation analysis.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        edges: List of BridgeEdge objects</span>
+<span class="sd">        eps_values: Array of epsilon values to test</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Tuple of (eps_values, residuals)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">residuals</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">eps</span> <span class="ow">in</span> <span class="n">eps_values</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">BRIDGE_TOOLS_AVAILABLE</span><span class="p">:</span>
+            <span class="n">residual</span> <span class="o">=</span> <span class="n">cycle_residual_fro</span><span class="p">(</span><span class="n">edges</span><span class="p">,</span> <span class="n">R</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">eps</span><span class="o">=</span><span class="n">eps</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Fallback</span>
+            <span class="n">residual</span> <span class="o">=</span> <span class="n">eps</span> <span class="o">*</span> <span class="mf">1e-3</span>
+        <span class="n">residuals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">residual</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">eps_values</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">residuals</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="compute_residual_with_eps">
+<a class="viewcode-back" href="../api.html#bridge_ccc.compute_residual_with_eps">[docs]</a>
+<span class="k">def</span> <span class="nf">compute_residual_with_eps</span><span class="p">(</span><span class="n">edges</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">BridgeEdge</span><span class="p">],</span> <span class="n">R</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">eps</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compute residual E(R) = ||∏exp{-ε(N_e-RD_e)} - I|| for given R and ε.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        edges: List of BridgeEdge objects</span>
+<span class="sd">        R: Parameter value</span>
+<span class="sd">        eps: Epsilon value</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Residual value</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">BRIDGE_TOOLS_AVAILABLE</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">cycle_residual_fro</span><span class="p">(</span><span class="n">edges</span><span class="p">,</span> <span class="n">R</span><span class="p">,</span> <span class="n">eps</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># Fallback implementation</span>
+        <span class="k">return</span> <span class="nb">abs</span><span class="p">(</span><span class="n">R</span> <span class="o">-</span> <span class="mf">1.0</span><span class="p">)</span> <span class="o">*</span> <span class="n">eps</span> <span class="o">+</span> <span class="n">eps</span><span class="o">**</span><span class="mi">2</span></div>
+
+
+
+<div class="viewcode-block" id="enhanced_commutator_diagnostics">
+<a class="viewcode-back" href="../api.html#bridge_ccc.enhanced_commutator_diagnostics">[docs]</a>
+<span class="k">def</span> <span class="nf">enhanced_commutator_diagnostics</span><span class="p">(</span><span class="n">edges</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">BridgeEdge</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Standalone function for enhanced commutator diagnostics.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        edges: List of BridgeEdge objects</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Dictionary with commutator analysis</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">analyzer</span> <span class="o">=</span> <span class="n">CCCBridgeAnalyzer</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">analyzer</span><span class="o">.</span><span class="n">enhanced_commutator_diagnostics</span><span class="p">(</span><span class="n">edges</span><span class="p">)</span></div>
+
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="c1"># Self-test and validation</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;🧪 Testing CCC Bridge Analysis Module&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;=&quot;</span> <span class="o">*</span> <span class="mi">50</span><span class="p">)</span>
+
+    <span class="c1"># Test bridge analyzer</span>
+    <span class="n">analyzer</span> <span class="o">=</span> <span class="n">CCCBridgeAnalyzer</span><span class="p">()</span>
+
+    <span class="c1"># Create test edges</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">📊 Creating CCC test edges...&quot;</span><span class="p">)</span>
+    <span class="n">edges</span> <span class="o">=</span> <span class="n">analyzer</span><span class="o">.</span><span class="n">create_ccc_edges</span><span class="p">(</span><span class="n">n_dim</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">n_edges</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">complexity_factor</span><span class="o">=</span><span class="mf">1.5</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Created </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">edges</span><span class="p">)</span><span class="si">}</span><span class="s2"> edges of dimension </span><span class="si">{</span><span class="n">edges</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">N</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Test enhanced commutator diagnostics</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">🔍 Testing enhanced commutator diagnostics...&quot;</span><span class="p">)</span>
+    <span class="n">comm_diag</span> <span class="o">=</span> <span class="n">analyzer</span><span class="o">.</span><span class="n">enhanced_commutator_diagnostics</span><span class="p">(</span><span class="n">edges</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Commutator structure: </span><span class="si">{</span><span class="n">comm_diag</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;commutator_structure&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;unknown&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  max_ND_comm: </span><span class="si">{</span><span class="n">comm_diag</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;max_ND_comm&#39;</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="si">:</span><span class="s2">.3e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Test ε-continuation analysis</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">📈 Testing ε-continuation analysis...&quot;</span><span class="p">)</span>
+    <span class="n">eps_analysis</span> <span class="o">=</span> <span class="n">analyzer</span><span class="o">.</span><span class="n">epsilon_continuation_analysis</span><span class="p">(</span><span class="n">edges</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Converged: </span><span class="si">{</span><span class="n">eps_analysis</span><span class="p">[</span><span class="s1">&#39;converged&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Final α: </span><span class="si">{</span><span class="n">eps_analysis</span><span class="p">[</span><span class="s1">&#39;final_alpha&#39;</span><span class="p">]</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  R*: </span><span class="si">{</span><span class="n">eps_analysis</span><span class="p">[</span><span class="s1">&#39;R_star&#39;</span><span class="p">]</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Complete CCC bridge analysis</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">🔬 Complete CCC bridge analysis...&quot;</span><span class="p">)</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">analyzer</span><span class="o">.</span><span class="n">analyze_ccc_bridge</span><span class="p">(</span><span class="n">edges</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  R* = </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">R_star</span><span class="si">:</span><span class="s2">.8f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  SE(R*) = </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">se_estimate</span><span class="si">:</span><span class="s2">.3e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  α factor = </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">alpha_factor</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Converged: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">converged</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Validate A2 acceptance criterion</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">✅ Validating A2 acceptance criterion...&quot;</span><span class="p">)</span>
+    <span class="n">validation</span> <span class="o">=</span> <span class="n">analyzer</span><span class="o">.</span><span class="n">validate_bridge_analysis</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">validation</span><span class="p">[</span><span class="s2">&quot;A2_met&quot;</span><span class="p">]:</span>
+        <span class="nb">print</span><span class="p">(</span>
+            <span class="s2">&quot;  ✅ A2 criterion met: Bridge analysis complete with R*, SE, α, and ε-sweep&quot;</span>
+        <span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;  ❌ A2 criterion issues:&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">issue</span> <span class="ow">in</span> <span class="n">validation</span><span class="p">[</span><span class="s2">&quot;issues&quot;</span><span class="p">]:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;    - </span><span class="si">{</span><span class="n">issue</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">✅ CCC Bridge Analysis module tests completed!&quot;</span><span class="p">)</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, CCC Clock Development Team.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

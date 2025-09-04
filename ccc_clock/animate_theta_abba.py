@@ -298,15 +298,20 @@ anim = animation.FuncAnimation(fig, animate_frame, frames=total_frames,
                              interval=1000/fps, blit=False, repeat=True)
 
 # Save animation
-output_path = '/home/ubuntu/ccc_clock/figures/theta_abba_animation.mp4'
+output_path = 'figures/theta_abba_animation.mp4'
 os.makedirs(os.path.dirname(output_path), exist_ok=True)
 
 print(f"Saving animation to: {output_path}")
 print("This may take several minutes...")
 
-# Use ffmpeg writer for high quality
-Writer = animation.writers['ffmpeg']
-writer = Writer(fps=fps, metadata=dict(artist='CCC Clock Demo'), bitrate=1800)
+# Use ffmpeg writer for high quality, fallback to pillow if ffmpeg not available
+try:
+    Writer = animation.writers['ffmpeg']
+    writer = Writer(fps=fps, metadata=dict(artist='CCC Clock Demo'), bitrate=1800)
+except RuntimeError:
+    print("FFmpeg not available, using pillow writer...")
+    Writer = animation.writers['pillow']
+    writer = Writer(fps=fps, metadata=dict(artist='CCC Clock Demo'))
 
 try:
     anim.save(output_path, writer=writer, dpi=100)
