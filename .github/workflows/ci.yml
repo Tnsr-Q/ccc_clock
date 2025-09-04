@@ -11,15 +11,15 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [3.9, 3.10, 3.11]
+        python-version: ["3.9", "3.10", "3.11"]
 
     steps:
     - uses: actions/checkout@v4
     
-    - name: Set up Python 
+    - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v4
       with:
-        python-version: 3.11
+        python-version: ${{ matrix.python-version }}
     
     - name: Install system dependencies
       run: |
@@ -30,31 +30,39 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -e .
-        pip install -r requirements.txt
+        pip install -r ccc_clock/requirements.txt
         pip install pytest-cov flake8 black isort mypy
     
     - name: Lint with flake8
       run: |
+        cd ccc_clock
         flake8 src tests --count --select=E9,F63,F7,F82 --show-source --statistics
         flake8 src tests --count --exit-zero --max-complexity=10 --max-line-length=88 --statistics
     
     - name: Check code formatting with black
-      run: black --check src tests
+      run: |
+        cd ccc_clock
+        black --check src tests
     
     - name: Check import sorting with isort
-      run: isort --check-only src tests
+      run: |
+        cd ccc_clock
+        isort --check-only src tests
     
     - name: Type check with mypy
-      run: mypy src --ignore-missing-imports
+      run: |
+        cd ccc_clock
+        mypy src --ignore-missing-imports
     
     - name: Test with pytest
       run: |
+        cd ccc_clock
         pytest tests/ -v --cov=src --cov-report=xml --cov-report=html
     
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v3
       with:
-        file: ./coverage.xml
+        file: ./ccc_clock/coverage.xml
         flags: unittests
         name: codecov-umbrella
 
@@ -74,12 +82,12 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -e .
-        pip install -r requirements.txt
+        pip install -r ccc_clock/requirements.txt
         pip install sphinx sphinx-rtd-theme myst-parser
     
     - name: Build documentation
       run: |
-        cd docs
+        cd ccc_clock/docs
         make html
     
     - name: Deploy to GitHub Pages
@@ -87,7 +95,7 @@ jobs:
       uses: peaceiris/actions-gh-pages@v3
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_dir: ./docs/_build/html
+        publish_dir: ./ccc_clock/docs/_build/html
 
   animation:
     runs-on: ubuntu-latest
@@ -110,14 +118,16 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -e .
-        pip install -r requirements.txt
+        pip install -r ccc_clock/requirements.txt
         pip install matplotlib ffmpeg-python
     
     - name: Generate animation
-      run: python animate_theta_abba.py
+      run: |
+        cd ccc_clock
+        python animate_theta_abba.py
     
     - name: Upload animation artifact
       uses: actions/upload-artifact@v3
       with:
         name: theta-abba-animation
-        path: figures/theta_abba_animation.mp4
+        path: ccc_clock/figures/theta_abba_animation.mp4
