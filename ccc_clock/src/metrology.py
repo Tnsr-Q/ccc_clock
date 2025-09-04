@@ -62,9 +62,7 @@ PARAMETER_SETS = {
     "C": ParameterSet(
         name="C (conservative)",
         K_dot=1e9,  # bits/s
-        S_loss_dot=10e-12
-        * 3e8
-        / (1.38e-23 * 300),  # 10 pW at 300K converted to bits/s
+        S_loss_dot=10e-12 * 3e8 / (1.38e-23 * 300),  # 10 pW at 300K converted to bits/s
         T=300,  # K
         description="Conservative configuration with higher dissipation",
     ),
@@ -104,9 +102,7 @@ class CCCMetrology:
 
         denominator = S_e_dot + params.S_loss_dot
         if denominator <= 0:
-            warnings.warn(
-                "Denominator S_e_dot + S_loss_dot <= 0, using regularization"
-            )
+            warnings.warn("Denominator S_e_dot + S_loss_dot <= 0, using regularization")
             denominator = max(denominator, 1e-10)
 
         R_op = params.K_dot / denominator
@@ -218,9 +214,7 @@ class CCCMetrology:
         for param_name, params in PARAMETER_SETS.items():
             param_results = {
                 "R_op": self.compute_operational_curvature(params),
-                "tau_req_matrix": np.zeros(
-                    (len(sigma_0_values), len(A_Sigma_range))
-                ),
+                "tau_req_matrix": np.zeros((len(sigma_0_values), len(A_Sigma_range))),
                 "snr_matrix": np.zeros((len(sigma_0_values), len(A_Sigma_range))),
             }
 
@@ -326,9 +320,7 @@ class ABBASimulator:
             ccc_signal *= -1
 
         # Generate systematic errors (don't flip with loop reversal)
-        systematics = systematics_amplitude * np.sin(
-            2 * np.pi * 0.1 * t
-        )  # Slow drift
+        systematics = systematics_amplitude * np.sin(2 * np.pi * 0.1 * t)  # Slow drift
         systematics += (
             systematics_amplitude
             * 0.5
@@ -362,9 +354,7 @@ class ABBASimulator:
                 windowed_std = np.std(demod_filtered[-window_samples:]) / np.sqrt(
                     window_samples
                 )
-                snr = (
-                    abs(windowed_mean) / windowed_std if windowed_std > 0 else 0
-                )
+                snr = abs(windowed_mean) / windowed_std if windowed_std > 0 else 0
                 snr_values.append(snr)
             else:
                 snr_values.append(0)
@@ -411,9 +401,8 @@ class ABBASimulator:
         )
 
         # Verify sign flip
-        sign_flip_detected = (
-            np.sign(trace_normal["final_demod_value"])
-            != np.sign(trace_reversed["final_demod_value"])
+        sign_flip_detected = np.sign(trace_normal["final_demod_value"]) != np.sign(
+            trace_reversed["final_demod_value"]
         )
 
         return {
@@ -478,9 +467,7 @@ if __name__ == "__main__":
         if tau_req <= 72 * 3600:
             print(f"    ✅ A1 criterion met!")
         else:
-            print(
-                f"    ❌ A1 criterion not met (need larger A_Σ or better params)"
-            )
+            print(f"    ❌ A1 criterion not met (need larger A_Σ or better params)")
 
     # Test ABBA simulator
     print("\n🔄 Testing ABBA Simulator:")
@@ -498,8 +485,6 @@ if __name__ == "__main__":
     if sign_flip_demo["sign_flip_detected"]:
         print("  ✅ A3 criterion: Sign flip under loop reversal confirmed!")
     else:
-        print(
-            "  ❌ A3 criterion: Sign flip not detected (may need longer integration)"
-        )
+        print("  ❌ A3 criterion: Sign flip not detected (may need longer integration)")
 
     print("\n✅ CCC Metrology module tests completed!")
