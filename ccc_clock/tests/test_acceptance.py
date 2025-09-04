@@ -23,7 +23,6 @@ from bridge_ccc import CCCBridgeAnalyzer
 from metrology import ABBASimulator, CCCMetrology, PARAMETER_SETS
 from protocol import ABBASequence, CCCProtocol, ThetaLoop
 
-
 class TestAcceptanceCriteria:
     """Test suite for CCC clock acceptance criteria."""
 
