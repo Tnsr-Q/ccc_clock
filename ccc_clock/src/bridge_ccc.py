@@ -474,9 +474,8 @@ if __name__ == "__main__":
     print("\n✅ Validating A2 acceptance criterion...")
     validation = analyzer.validate_bridge_analysis(result)
     if validation["A2_met"]:
-        print(
-            "  ✅ A2 criterion met: Bridge analysis complete with R*, SE, α, and ε-sweep"
-        )
+        print("  ✅ A2 criterion met: Bridge analysis complete with "
+              "R*, SE, α, and ε-sweep")
     else:
         print("  ❌ A2 criterion issues:")
         for issue in validation["issues"]:
