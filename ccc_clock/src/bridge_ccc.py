@@ -287,7 +287,10 @@ class CCCBridgeAnalyzer:
             return "mixed_structure"
 
     def analyze_ccc_bridge(
-        self, edges: List[BridgeEdge], eps_start: float = 1e-2, eps_target: float = 1e-9
+        self,
+        edges: List[BridgeEdge],
+        eps_start: float = 1e-2,
+        eps_target: float = 1e-9,
     ) -> CCCBridgeResult:
         """
         Complete CCC bridge analysis with all diagnostics.
