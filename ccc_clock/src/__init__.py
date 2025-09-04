@@ -18,9 +18,9 @@ from .bridge_ccc import (
     epsilon_continuation,
 )
 from .metrology import (
+    PARAMETER_SETS,
     ABBASimulator,
     CCCMetrology,
-    PARAMETER_SETS,
     ParameterSet,
     compute_operational_curvature,
     compute_snr,
@@ -33,6 +33,29 @@ from .protocol import (
     ThetaLoop,
     WitnessChannel,
 )
+
+# Make re-exports explicit
+__all__ = [
+    # Bridge analysis
+    "CCCBridgeAnalyzer",
+    "compute_residual_with_eps",
+    "enhanced_commutator_diagnostics",
+    "epsilon_continuation",
+    # Metrology
+    "PARAMETER_SETS",
+    "ABBASimulator",
+    "CCCMetrology",
+    "ParameterSet",
+    "compute_operational_curvature",
+    "compute_snr",
+    "compute_time_to_detect",
+    # Protocol
+    "ABBASequence",
+    "CCCProtocol",
+    "OrthogonalityTest",
+    "ThetaLoop",
+    "WitnessChannel",
+]
 
 __version__ = "1.0.0"
 __author__ = "CCC Clock Team"
