@@ -111,4 +111,4 @@ dmypy.json
 .pyre/
 
 # macOS
-.DS_Store
+.DS_Storeccc_clock/docs/_build/
