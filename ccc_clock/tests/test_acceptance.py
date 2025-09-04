@@ -11,17 +11,17 @@ Automated tests to validate acceptance criteria A1-A5:
 - A5: Reproducible code from clean environment
 """
 
-import os
 import sys
-
-import numpy as np
-import pytest
+import os
 
 sys.path.append(os.path.join(os.path.dirname(__file__), "..", "src"))
 
+import pytest
+import numpy as np
+from metrology import CCCMetrology, PARAMETER_SETS, ABBASimulator
 from bridge_ccc import CCCBridgeAnalyzer
-from metrology import ABBASimulator, CCCMetrology, PARAMETER_SETS
-from protocol import ABBASequence, CCCProtocol, ThetaLoop
+from protocol import CCCProtocol, ThetaLoop, ABBASequence
+
 
 class TestAcceptanceCriteria:
     """Test suite for CCC clock acceptance criteria."""
@@ -222,9 +222,9 @@ class TestAcceptanceCriteria:
 
         # Test that all modules can be imported
         try:
-            from bridge_ccc import CCCBridgeAnalyzer
             from metrology import CCCMetrology, PARAMETER_SETS
-            from protocol import ABBASequence, CCCProtocol, ThetaLoop
+            from bridge_ccc import CCCBridgeAnalyzer
+            from protocol import CCCProtocol, ThetaLoop, ABBASequence
 
             print("   ✅ All modules import successfully")
             modules_import = True
