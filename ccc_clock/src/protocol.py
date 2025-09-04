@@ -90,7 +90,9 @@ class ThetaLoop:
             ),
         )
 
-    def generate_path_points(self, n_points: int = 100) -> Tuple[np.ndarray, np.ndarray]:
+    def generate_path_points(
+        self, n_points: int = 100
+    ) -> Tuple[np.ndarray, np.ndarray]:
         """
         Generate discrete points along the loop path.
 
@@ -383,7 +385,9 @@ class CCCProtocol:
             Dictionary with timing information
         """
         # ABBA sequence timing
-        time_array, modulation, phase_labels = self.abba_sequence.generate_timing_sequence()
+        time_array, modulation, phase_labels = (
+            self.abba_sequence.generate_timing_sequence()
+        )
 
         # Witness channel traces
         witness_traces = {}
@@ -607,7 +611,9 @@ if __name__ == "__main__":
             all_tests_passed = False
 
     if all_tests_passed:
-        print("  ✅ A3 criterion: All orthogonality tests demonstrate expected behavior!")
+        print(
+            "  ✅ A3 criterion: All orthogonality tests demonstrate expected behavior!"
+        )
     else:
         print("  ❌ A3 criterion: Some orthogonality tests failed")
 
