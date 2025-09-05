@@ -11,16 +11,17 @@ Automated tests to validate acceptance criteria A1-A5:
 - A5: Reproducible code from clean environment
 """
 
-import sys
 import os
+import sys
 
-sys.path.append(os.path.join(os.path.dirname(__file__), "..", "src"))
+# Import from the src package using proper Python path resolution
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
-import pytest
-import numpy as np
-from metrology import CCCMetrology, PARAMETER_SETS, ABBASimulator
-from bridge_ccc import CCCBridgeAnalyzer
-from protocol import CCCProtocol, ThetaLoop, ABBASequence
+import numpy as np  # noqa: E402
+
+from bridge_ccc import CCCBridgeAnalyzer  # noqa: E402
+from metrology import ABBASimulator, CCCMetrology, PARAMETER_SETS  # noqa: E402
+from protocol import ABBASequence, CCCProtocol, ThetaLoop  # noqa: E402
 
 
 class TestAcceptanceCriteria:
