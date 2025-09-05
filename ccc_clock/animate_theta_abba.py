@@ -10,14 +10,11 @@ Creates a 20-30 second animation showing:
 - Clear visualization of the measurement principle
 """
 
-import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.animation as animation
-from matplotlib.patches import Circle, FancyArrowPatch
-from matplotlib.collections import LineCollection
-import matplotlib.patches as patches
-from mpl_toolkits.mplot3d import Axes3D
 import os
+
+import matplotlib.animation as animation
+import matplotlib.pyplot as plt
+import numpy as np
 
 # Set up the figure and animation parameters
 plt.style.use('seaborn-v0_8-darkgrid')
@@ -298,7 +295,7 @@ anim = animation.FuncAnimation(fig, animate_frame, frames=total_frames,
                              interval=1000/fps, blit=False, repeat=True)
 
 # Save animation
-output_path = '/home/ubuntu/ccc_clock/figures/theta_abba_animation.mp4'
+output_path = os.path.join(os.path.dirname(__file__), 'figures', 'theta_abba_animation.mp4')
 os.makedirs(os.path.dirname(output_path), exist_ok=True)
 
 print(f"Saving animation to: {output_path}")
