@@ -13,25 +13,25 @@ Key features:
 
 import sys
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Dict, List, Tuple
 
 import numpy as np
 
 # Import existing bridge analysis tools
-sys.path.append("/home/ubuntu/Uploads")
-sys.path.append("/home/ubuntu")
-
 try:
-    from bridge_null import (
+    # Import from the parent directory (repository root)
+    repo_root = Path(__file__).parent.parent
+    sys.path.insert(0, str(repo_root))
+    
+    from experiments_bridge_null import (
         BridgeEdge,
         bridge_null_refined,
+        bridge_null_spectral,
         commutator_diagnostics,
         cycle_residual_fro,
         local_se,
         make_random_edges,
-    )
-    from experiments_bridge_null import (
-        bridge_null_spectral,
     )
 
     BRIDGE_TOOLS_AVAILABLE = True

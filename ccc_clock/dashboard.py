@@ -6,8 +6,6 @@ Real-time monitoring dashboard for CCC Clock demonstration system.
 Displays demodulation SNR, parity ratio, and witness channels.
 """
 
-import asyncio
-import json
 import logging
 import threading
 import time
@@ -16,10 +14,7 @@ from datetime import datetime, timedelta
 
 import dash
 import numpy as np
-import pandas as pd
-import plotly.express as px
 import plotly.graph_objs as go
-import websockets
 from dash import Input, Output, callback, dcc, html
 
 # Configure logging
