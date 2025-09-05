@@ -14,14 +14,14 @@ Automated tests to validate acceptance criteria A1-A5:
 import os
 import sys
 
-import numpy as np
-
 # Import from the src package using proper Python path resolution
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
-from bridge_ccc import CCCBridgeAnalyzer
-from metrology import ABBASimulator, CCCMetrology, PARAMETER_SETS
-from protocol import ABBASequence, CCCProtocol, ThetaLoop
+import numpy as np  # noqa: E402
+
+from bridge_ccc import CCCBridgeAnalyzer  # noqa: E402
+from metrology import ABBASimulator, CCCMetrology, PARAMETER_SETS  # noqa: E402
+from protocol import ABBASequence, CCCProtocol, ThetaLoop  # noqa: E402
 
 
 class TestAcceptanceCriteria:
