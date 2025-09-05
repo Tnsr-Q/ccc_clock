@@ -140,13 +140,15 @@ class CCCBridgeAnalyzer:
             Dictionary with detailed analysis results
         """
         if not BRIDGE_TOOLS_AVAILABLE:
-            # Fallback implementation
+            # Fallback implementation with all required keys
             return {
+                "R_star": 1.0,
                 "eps_values": [eps_start],
                 "residuals": [1e-6],
                 "R_values": [1.0],
                 "alpha_estimates": [1.0],
                 "converged": True,
+                "final_alpha": 1.0,
                 "note": "Fallback implementation - bridge tools not available",
             }
 
