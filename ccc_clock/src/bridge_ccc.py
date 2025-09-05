@@ -142,7 +142,13 @@ class CCCBridgeAnalyzer:
         if not BRIDGE_TOOLS_AVAILABLE:
             # Fallback implementation with all required keys
             return {
-                "R_star": 1.0,
+                "R_star": 1.0
+                "eps_values": [eps_start, eps_target],
+                "residuals": [1e-3, 1e-6],
+                "R_values": [1.0, 1.0],
+                "alpha_estimates": [1.0, 1.0],
+                "final_alpha": 1.0,
+
                 "eps_values": [eps_start],
                 "residuals": [1e-6],
                 "R_values": [1.0],
