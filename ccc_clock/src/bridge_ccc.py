@@ -30,7 +30,6 @@ try:
         local_se,
         make_random_edges,
     )
-
     from experiments_bridge_null import bridge_null_spectral
 
     BRIDGE_TOOLS_AVAILABLE = True
