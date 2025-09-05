@@ -14,14 +14,14 @@ Automated tests to validate acceptance criteria A1-A5:
 import os
 import sys
 
-# Import from the src package using proper Python path resolution
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
+sys.path.append(os.path.join(os.path.dirname(__file__), "..", "src"))
 
-import numpy as np  # noqa: E402
+import numpy as np
+import pytest
 
-from bridge_ccc import CCCBridgeAnalyzer  # noqa: E402
-from metrology import ABBASimulator, CCCMetrology, PARAMETER_SETS  # noqa: E402
-from protocol import ABBASequence, CCCProtocol, ThetaLoop  # noqa: E402
+from bridge_ccc import CCCBridgeAnalyzer
+from metrology import PARAMETER_SETS, ABBASimulator, CCCMetrology
+from protocol import ABBASequence, CCCProtocol, ThetaLoop
 
 
 class TestAcceptanceCriteria:
@@ -223,9 +223,9 @@ class TestAcceptanceCriteria:
 
         # Test that all modules can be imported
         try:
-            from metrology import CCCMetrology, PARAMETER_SETS
             from bridge_ccc import CCCBridgeAnalyzer
-            from protocol import CCCProtocol, ThetaLoop, ABBASequence
+            from metrology import PARAMETER_SETS, CCCMetrology
+            from protocol import ABBASequence, CCCProtocol, ThetaLoop
 
             print("   ✅ All modules import successfully")
             modules_import = True
