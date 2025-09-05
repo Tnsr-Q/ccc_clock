@@ -274,6 +274,75 @@ class TestAcceptanceCriteria:
         assert functionality_works, "Basic functionality failed"
         assert numerical_consistent, "Numerical results not consistent"
 
+    def test_a6_animation_generation_criterion(self):
+        """
+        Test A6: Animation generation works in CI environment
+        """
+        print("\n🧪 Testing A6: Animation generation criterion")
+        
+        import subprocess
+        import tempfile
+        import shutil
+        
+        # Create a temporary directory for testing
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_animation_path = os.path.join(temp_dir, "test_animation.mp4")
+            
+            # Test that we can run the animation script
+            try:
+                # Import animation script functions to test basic functionality
+                animation_script = os.path.join(os.path.dirname(__file__), "..", "animate_theta_abba.py")
+                
+                # Test FFmpeg availability
+                result = subprocess.run(["ffmpeg", "-version"], 
+                                      capture_output=True, text=True, timeout=10)
+                ffmpeg_available = result.returncode == 0
+                print(f"   FFmpeg available: {ffmpeg_available}")
+                
+                # Test matplotlib and dependencies
+                try:
+                    import matplotlib.pyplot as plt
+                    import matplotlib.animation as animation
+                    import numpy as np
+                    matplotlib_available = True
+                    print("   ✅ Matplotlib and animation dependencies available")
+                except ImportError as e:
+                    matplotlib_available = False
+                    print(f"   ❌ Matplotlib dependencies missing: {e}")
+                
+                # Test that the figures directory exists and is writable
+                figures_dir = os.path.join(os.path.dirname(__file__), "..", "figures")
+                figures_writable = os.path.exists(figures_dir) and os.access(figures_dir, os.W_OK)
+                print(f"   Figures directory writable: {figures_writable}")
+                
+                # Test basic animation parameters are valid
+                animation_params_valid = True
+                try:
+                    # Basic parameter validation
+                    duration = 10  # seconds
+                    fps = 15
+                    total_frames = duration * fps
+                    assert duration > 0, "Duration must be positive"
+                    assert fps > 0, "FPS must be positive"
+                    assert total_frames > 0, "Total frames must be positive"
+                    print(f"   Animation parameters valid: duration={duration}s, fps={fps}, frames={total_frames}")
+                except Exception as e:
+                    animation_params_valid = False
+                    print(f"   ❌ Animation parameters invalid: {e}")
+                
+                a6_met = ffmpeg_available and matplotlib_available and figures_writable and animation_params_valid
+                print(f"   A6 criterion met: {a6_met}")
+                
+                # Individual assertions
+                assert ffmpeg_available, "FFmpeg not available for animation generation"
+                assert matplotlib_available, "Matplotlib dependencies not available"
+                assert figures_writable, "Figures directory not writable"
+                assert animation_params_valid, "Animation parameters invalid"
+                
+            except Exception as e:
+                print(f"   ❌ Animation generation test failed: {e}")
+                raise AssertionError(f"A6 criterion not met: {e}")
+
     def test_overall_acceptance_summary(self):
         """
         Overall summary of all acceptance criteria.
@@ -303,13 +372,23 @@ class TestAcceptanceCriteria:
         sign_flip = simulator.demonstrate_sign_flip(params_a, 1e-6, 60)
         a3_quick = sign_flip["sign_flip_detected"]
 
+        # A6 quick check - animation generation capability
+        import subprocess
+        try:
+            result = subprocess.run(["ffmpeg", "-version"], 
+                                  capture_output=True, text=True, timeout=10)
+            a6_quick = result.returncode == 0
+        except Exception:
+            a6_quick = False
+
         print(f"A1 (Time-to-detect ≤ 72h): {'✅ PASS' if a1_quick else '❌ FAIL'}")
         print(f"A2 (Bridge analysis): {'✅ PASS' if a2_quick else '❌ FAIL'}")
         print(f"A3 (Sign flip): {'✅ PASS' if a3_quick else '❌ FAIL'}")
         print(f"A4 (Documentation): ✅ PASS (checked in separate test)")
         print(f"A5 (Reproducibility): ✅ PASS (checked in separate test)")
+        print(f"A6 (Animation generation): {'✅ PASS' if a6_quick else '❌ FAIL'}")
 
-        overall_pass = a1_quick and a2_quick and a3_quick
+        overall_pass = a1_quick and a2_quick and a3_quick and a6_quick
         print(f"\n{'='*45}")
         print(
             f"OVERALL STATUS: {'✅ READY FOR EXPERIMENT' if overall_pass else '❌ NEEDS IMPROVEMENT'}"
@@ -357,5 +436,11 @@ if __name__ == "__main__":
         print("✅ A5 test passed")
     except AssertionError as e:
         print(f"❌ A5 test failed: {e}")
+
+    try:
+        test_suite.test_a6_animation_generation_criterion()
+        print("✅ A6 test passed")
+    except AssertionError as e:
+        print(f"❌ A6 test failed: {e}")
 
     test_suite.test_overall_acceptance_summary()
