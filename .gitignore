@@ -112,3 +112,7 @@ dmypy.json
 
 # macOS
 .DS_Store
+
+# Rust
+target/
+Cargo.lock
