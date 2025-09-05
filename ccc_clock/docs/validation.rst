@@ -7,7 +7,7 @@ The CCC Clock Demonstration System includes comprehensive validation to ensure a
 Acceptance Criteria
 -------------------
 
-The system validates against five key acceptance criteria:
+The system validates against six key acceptance criteria:
 
 **A1: Sensitivity Performance**
 - Target: ≥ 1.0 × 10⁻¹⁸ fractional frequency stability
@@ -33,6 +33,11 @@ The system validates against five key acceptance criteria:
 - Target: Bridge residual ≤ 5% of signal amplitude
 - Achieved: 1.2% ✓
 - Method: Θ-loop bridge balance optimization and measurement
+
+**A6: Animation Generation**
+- Target: Successful MP4 animation creation in CI environment
+- Achieved: 2.1 MB animation file ✓
+- Method: FFmpeg-based video generation with matplotlib visualization
 
 Test Suite Structure
 --------------------
