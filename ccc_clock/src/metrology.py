@@ -16,11 +16,7 @@ import warnings
 from dataclasses import dataclass
 from typing import Dict, List, Optional, Tuple
 
-import matplotlib.pyplot as plt
 import numpy as np
-import plotly.express as px
-import plotly.graph_objects as go
-from plotly.subplots import make_subplots
 
 
 @dataclass
