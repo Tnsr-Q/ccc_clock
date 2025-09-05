@@ -57,7 +57,7 @@ jobs:
     - name: Test with pytest
       run: |
         cd ccc_clock
-        python -m pytest ccc_clock/tests/ -v --cov=src --cov-report=xml --cov-report=html
+        python -m pytest tests/ -v --cov=src --cov-report=xml --cov-report=html
     
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v3
