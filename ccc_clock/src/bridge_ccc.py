@@ -22,9 +22,14 @@ sys.path.append("/home/ubuntu/Uploads")
 sys.path.append("/home/ubuntu")
 
 try:
-    from bridge_null import (BridgeEdge, bridge_null_refined,
-                             commutator_diagnostics, cycle_residual_fro,
-                             local_se, make_random_edges)
+    from bridge_null import (
+        BridgeEdge,
+        bridge_null_refined,
+        commutator_diagnostics,
+        cycle_residual_fro,
+        local_se,
+        make_random_edges,
+    )
 
     from experiments_bridge_null import bridge_null_spectral
 
