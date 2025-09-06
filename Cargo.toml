@@ -1,0 +1,9 @@
+[package]
+name = "ccc_clock"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+eframe = "0.24"
+egui = "0.24"
+chrono = { version = "0.4", features = ["serde"] }
