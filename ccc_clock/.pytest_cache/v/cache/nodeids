@@ -1,8 +1,0 @@
-[
-  "tests/test_acceptance.py::TestAcceptanceCriteria::test_a1_time_to_detect_criterion",
-  "tests/test_acceptance.py::TestAcceptanceCriteria::test_a2_bridge_analysis_criterion",
-  "tests/test_acceptance.py::TestAcceptanceCriteria::test_a3_sign_flip_criterion",
-  "tests/test_acceptance.py::TestAcceptanceCriteria::test_a4_documentation_criterion",
-  "tests/test_acceptance.py::TestAcceptanceCriteria::test_a5_reproducibility_criterion",
-  "tests/test_acceptance.py::TestAcceptanceCriteria::test_overall_acceptance_summary"
-]
