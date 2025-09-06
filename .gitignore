@@ -63,6 +63,11 @@ instance/
 
 # Sphinx documentation
 docs/_build/
+ccc_clock/docs/_build/
+
+# Generated figures and outputs
+figures/output/
+ccc_clock/figures/output/
 
 # PyBuilder
 target/
