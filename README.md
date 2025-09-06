@@ -254,6 +254,40 @@ test_acceptance.py::test_systematic_rejection PASSED
 ======== 6 passed in 4.32s ========
 ```
 
+## 🚀 **CI/CD & Deployment**
+
+### GitHub Actions Workflows
+
+<details>
+<summary><b>🔧 Available Workflows</b></summary>
+
+| Workflow | Trigger | Runners | Purpose |
+|----------|---------|---------|---------|
+| **CI** | Push/PR | GitHub-hosted | Standard testing & validation |
+| **Self-Hosted CI** | Manual/`[self-hosted]` | Self-hosted | High-performance builds |
+| **Documentation** | Main branch | GitHub-hosted | Auto-deploy docs |
+| **Animation** | Push | GitHub-hosted/Self-hosted | Generate visualizations |
+
+</details>
+
+### Self-Hosted Runner Support
+
+For compute-intensive tasks and custom environments:
+
+```bash
+# Quick setup (see SELF_HOSTED_RUNNERS.md for details)
+mkdir actions-runner && cd actions-runner
+curl -o actions-runner-linux-x64-2.328.0.tar.gz -L https://github.com/actions/runner/releases/download/v2.328.0/actions-runner-linux-x64-2.328.0.tar.gz
+tar xzf ./actions-runner-linux-x64-2.328.0.tar.gz
+./config.sh --url https://github.com/Tnsr-Q/ccc_clock --token <YOUR_TOKEN>
+./run.sh
+```
+
+**Trigger self-hosted builds:**
+- Include `[self-hosted]` in commit messages
+- Use GitHub Actions "Self-Hosted CI" workflow dispatch
+- [Complete setup guide →](SELF_HOSTED_RUNNERS.md)
+
 ---
 
 ## 📊 **Live Status Dashboard**
