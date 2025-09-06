@@ -30,6 +30,8 @@ try:
         local_se,
         make_random_edges,
     )
+    # Import from the relocated experiments module
+    sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', 'src', 'analysis'))
     from experiments_bridge_null import bridge_null_spectral
 
     BRIDGE_TOOLS_AVAILABLE = True

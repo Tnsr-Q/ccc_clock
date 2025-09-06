@@ -8,12 +8,12 @@
   [![GitHub Stars](https://img.shields.io/github/stars/Tnsr-Q/ccc_clock?style=for-the-badge&logo=github&color=00ffcc)](https://github.com/Tnsr-Q/ccc_clock/stargazers)
   [![License](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge&logo=open-source-initiative)](LICENSE)
   [![Python](https://img.shields.io/badge/Python-3.9%2B-blue?style=for-the-badge&logo=python)](https://www.python.org/)
-  [![Status](https://img.shields.io/badge/Status-PRODUCTION%20READY-success?style=for-the-badge&logo=checkmarx)](GO_NO_GO_DECISION.md)
+  [![Status](https://img.shields.io/badge/Status-PRODUCTION%20READY-success?style=for-the-badge&logo=checkmarx)](docs/executive/GO_NO_GO_DECISION.md)
   [![Docs](https://img.shields.io/badge/Docs-GitHub%20Pages-orange?style=for-the-badge&logo=readthedocs)](https://tnsr-q.github.io/ccc_clock/)
   
   **🚀 Revolutionary Physics | 🔬 Production Ready | 🤝 Seeking Lab Partners**
   
-  [**Live Demo**](https://tnsr-q.github.io/ccc_clock/) | [**Documentation**](docs/) | [**Theory Paper**](EXECUTIVE_BRIEF.md) | [**Get Started**](#quick-start) | [**Collaborate**](#collaboration)
+  [**Live Demo**](https://tnsr-q.github.io/ccc_clock/) | [**Documentation**](docs/) | [**Theory Paper**](docs/executive/EXECUTIVE_BRIEF.md) | [**Get Started**](#quick-start) | [**Collaborate**](#collaboration)
   
 </div>
 
@@ -228,9 +228,9 @@ ccc_clock/
   
 | Document | Description | Format |
 |----------|-------------|--------|
-| [Executive Brief](EXECUTIVE_BRIEF.md) | 2-page summary for PIs | [PDF](EXECUTIVE_BRIEF.pdf) |
+| [Executive Brief](docs/executive/EXECUTIVE_BRIEF.md) | 2-page summary for PIs | Markdown |
 | [Technical Details](docs/theory.md) | Complete theoretical framework | Markdown |
-| [Lab Integration](LAB_OUTREACH_TEMPLATE.md) | Partnership templates | Markdown |
+| [Lab Integration](docs/collaboration/LAB_OUTREACH_TEMPLATE.md) | Partnership templates | Markdown |
 | [API Reference](docs/api/) | Code documentation | Sphinx |
 | [Visualizations](figures/VISUALIZATION_SUITE_SUMMARY.md) | 8 publication figures | PNG/SVG |
 

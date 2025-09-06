@@ -16,6 +16,7 @@ High-level summaries and decision frameworks for leadership and collaborators.
 Detailed technical specifications, analysis results, and implementation guides.
 
 - **[Analysis Results](technical/ANALYSIS_RESULTS.md)** - Bridge analysis and experimental results
+- **[Bridge Null Enhancements](technical/bridge_null_enhancements_summary.md)** - Bridge null hypothesis improvements
 - **[Reproducibility Checklist](technical/REPRODUCIBILITY_CHECKLIST.md)** - Steps to reproduce results
 - **[Deployment Checklist](technical/DEPLOYMENT_CHECKLIST.md)** - Production deployment guide
 - **[Experiments Guide](technical/README_experiments.md)** - Experimental protocols
