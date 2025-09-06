@@ -262,7 +262,9 @@ def make_commuting_edges(n, m, seed=42):
     
     return edges
 
-# Import new utility functions
+# Import new utility functions from the ccc_clock package
+import sys
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', 'ccc_clock', 'src'))
 from bridge_null_utils import (
     compute_proportionality_metrics, joint_diag, apply_joint_diag_to_edges,
     run_self_tests

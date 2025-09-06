@@ -2,6 +2,12 @@
 
 This directory contains all figures, plots, and visualizations for the CCC Clock Demonstration System.
 
+## 📁 Directory Organization
+
+- **[scripts/](scripts/)** - Figure generation scripts and animation tools
+- **[static/](static/)** - PNG and SVG static figures (future organization)
+- **[interactive/](interactive/)** - HTML interactive visualizations (future organization)
+
 ## 📊 Figure Categories
 
 ### Static Figures (PNG/SVG)
@@ -25,7 +31,7 @@ Web-based interactive plots for exploration and presentation.
 - More interactive versions coming soon!
 
 ### Figure Generation Scripts
-Python scripts to reproduce all figures.
+Python scripts to reproduce all figures. Most scripts are in the root of this directory, with animations moved to `scripts/`.
 
 | Script | Creates | Dependencies |
 |--------|---------|--------------|
@@ -38,6 +44,7 @@ Python scripts to reproduce all figures.
 | `make_weight_optimization.py` | Weight optimization | matplotlib, numpy |
 | `make_static_explainer.py` | CCC concept diagram | matplotlib |
 | `make_animation.py` | Animated demonstrations | matplotlib, ffmpeg |
+| **[scripts/animate_theta_abba.py](scripts/animate_theta_abba.py)** | Θ-loop ABBA animation | matplotlib, ffmpeg |
 
 ### Shared Configuration
 - **[style_config.py](style_config.py)** - Consistent styling across all figures
