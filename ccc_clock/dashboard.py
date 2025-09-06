@@ -168,6 +168,24 @@ app.layout = html.Div(
                 ),
             ]
         ),
+        # Live CCC Animation Section
+        html.Div(
+            [
+                html.H3("Live CCC Clock Animation", style={"color": "#34495e", "textAlign": "center"}),
+                html.Div(
+                    [
+                        dcc.Graph(id="ccc-animation-plot"),
+                    ],
+                    style={"width": "100%", "display": "inline-block"},
+                ),
+            ],
+            style={
+                "backgroundColor": "#f8f9fa",
+                "padding": "15px",
+                "marginTop": "20px",
+                "marginBottom": "20px",
+            },
+        ),
         # Witness channels
         html.Div(
             [
@@ -207,12 +225,161 @@ app.layout = html.Div(
 )
 
 
+def create_ccc_live_animation(n_intervals, timestamps, snr_data, parity_data):
+    """Create a live animated visualization of the CCC Clock concept"""
+    
+    # Create a multi-panel animation showing CCC concept
+    fig = go.Figure()
+    
+    # Get current time for animation phase
+    current_time = time.time()
+    animation_phase = (current_time * 0.5) % (2 * np.pi)  # Slow rotation
+    
+    # Create circular path representing the operational loop
+    theta = np.linspace(0, 2*np.pi, 100)
+    r_outer = 1.0
+    r_inner = 0.6
+    
+    # Outer loop
+    x_outer = r_outer * np.cos(theta)
+    y_outer = r_outer * np.sin(theta)
+    
+    # Inner loop  
+    x_inner = r_inner * np.cos(theta)
+    y_inner = r_inner * np.sin(theta)
+    
+    # Current position on loop
+    current_x = r_outer * np.cos(animation_phase)
+    current_y = r_outer * np.sin(animation_phase)
+    
+    # Add the loop structure
+    fig.add_trace(go.Scatter(
+        x=x_outer, y=y_outer,
+        mode='lines',
+        line=dict(color='blue', width=3),
+        name='Outer Loop',
+        showlegend=True
+    ))
+    
+    fig.add_trace(go.Scatter(
+        x=x_inner, y=y_inner,
+        mode='lines',
+        line=dict(color='red', width=3),
+        name='Inner Loop',
+        showlegend=True
+    ))
+    
+    # Add connecting bridge (animated)
+    bridge_x = [r_inner * np.cos(animation_phase), r_outer * np.cos(animation_phase)]
+    bridge_y = [r_inner * np.sin(animation_phase), r_outer * np.sin(animation_phase)]
+    
+    fig.add_trace(go.Scatter(
+        x=bridge_x, y=bridge_y,
+        mode='lines+markers',
+        line=dict(color='green', width=4),
+        marker=dict(size=8, color='green'),
+        name='Θ-Bridge',
+        showlegend=True
+    ))
+    
+    # Current position marker
+    fig.add_trace(go.Scatter(
+        x=[current_x], y=[current_y],
+        mode='markers',
+        marker=dict(size=12, color='orange', symbol='circle'),
+        name='Current Position',
+        showlegend=True
+    ))
+    
+    # Add ABBA sequence visualization
+    abba_phase = int((animation_phase / (2*np.pi)) * 4) % 4
+    abba_labels = ['A₁', 'B₁', 'B₂', 'A₂']
+    abba_colors = ['lightblue', 'lightcoral', 'lightcoral', 'lightblue']
+    
+    # Add text annotation for current ABBA state
+    fig.add_annotation(
+        x=0, y=0,
+        text=f"ABBA Phase: {abba_labels[abba_phase]}",
+        showarrow=False,
+        font=dict(size=16, color=abba_colors[abba_phase]),
+        bgcolor="white",
+        bordercolor="black",
+        borderwidth=2
+    )
+    
+    # Add signal quality indicators based on actual data
+    if snr_data and parity_data:
+        latest_snr = snr_data[-1]
+        latest_parity = parity_data[-1]
+        
+        # SNR indicator
+        snr_color = 'green' if latest_snr > 20 else 'orange' if latest_snr > 10 else 'red'
+        fig.add_trace(go.Scatter(
+            x=[1.3], y=[0.8],
+            mode='markers+text',
+            marker=dict(size=20, color=snr_color),
+            text=[f"SNR: {latest_snr:.1f}dB"],
+            textposition="middle right",
+            name='SNR Status',
+            showlegend=False
+        ))
+        
+        # Parity indicator
+        parity_color = 'green' if abs(latest_parity - 0.5) < 0.1 else 'orange' if abs(latest_parity - 0.5) < 0.2 else 'red'
+        fig.add_trace(go.Scatter(
+            x=[1.3], y=[0.5],
+            mode='markers+text',
+            marker=dict(size=20, color=parity_color),
+            text=[f"Parity: {latest_parity:.3f}"],
+            textposition="middle right",
+            name='Parity Status',
+            showlegend=False
+        ))
+    
+    # Layout configuration
+    fig.update_layout(
+        title=dict(
+            text="CCC Clock Live Operation Visualization",
+            x=0.5,
+            font=dict(size=16)
+        ),
+        xaxis=dict(
+            range=[-1.5, 2.0],
+            showgrid=True,
+            zeroline=True,
+            showticklabels=False,
+            title=""
+        ),
+        yaxis=dict(
+            range=[-1.5, 1.5],
+            showgrid=True,
+            zeroline=True,
+            showticklabels=False,
+            title=""
+        ),
+        height=400,
+        showlegend=True,
+        legend=dict(
+            x=0.02,
+            y=0.98,
+            bgcolor="rgba(255,255,255,0.8)"
+        ),
+        plot_bgcolor='rgba(240,240,240,0.5)',
+        # Animation transitions
+        transition={'duration': 500, 'easing': 'linear'},
+        hovermode='closest'
+    )
+    
+    return fig
+
+
 @callback(
     [
         Output("snr-plot", "figure"),
         Output("parity-plot", "figure"),
         Output("witness-plot-1", "figure"),
         Output("witness-plot-2", "figure"),
+        Output("ccc-animation-plot", "figure"),
         Output("system-status", "children"),
     ],
     [
@@ -227,7 +394,7 @@ def update_plots(n, time_window_minutes):
         # Return empty plots if no data
         empty_fig = go.Figure()
         empty_fig.update_layout(title="Waiting for data...")
-        return empty_fig, empty_fig, empty_fig, empty_fig, "Initializing..."
+        return empty_fig, empty_fig, empty_fig, empty_fig, empty_fig, "Initializing..."
 
     # Convert to pandas for easier manipulation
     now = datetime.now()
@@ -240,7 +407,7 @@ def update_plots(n, time_window_minutes):
     if not indices:
         empty_fig = go.Figure()
         empty_fig.update_layout(title="No data in time window")
-        return empty_fig, empty_fig, empty_fig, empty_fig, "No recent data"
+        return empty_fig, empty_fig, empty_fig, empty_fig, empty_fig, "No recent data"
 
     filtered_times = [timestamps[i] for i in indices]
     filtered_snr = [list(data_buffer["snr"])[i] for i in indices]
@@ -250,7 +417,7 @@ def update_plots(n, time_window_minutes):
     filtered_b = [list(data_buffer["b_field"])[i] for i in indices]
     filtered_temp = [list(data_buffer["temperature"])[i] for i in indices]
 
-    # SNR Plot
+    # SNR Plot with animation
     snr_fig = go.Figure()
     snr_fig.add_trace(
         go.Scatter(
@@ -260,6 +427,7 @@ def update_plots(n, time_window_minutes):
             name="SNR",
             line=dict(color="#e74c3c", width=2),
             marker=dict(size=4),
+            connectgaps=True,
         )
     )
     snr_fig.update_layout(
@@ -268,9 +436,21 @@ def update_plots(n, time_window_minutes):
         yaxis_title="SNR (dB)",
         template="plotly_white",
         height=300,
+        # Add animation and transitions
+        transition={'duration': 500, 'easing': 'cubic-in-out'},
+        xaxis=dict(
+            autorange=True,
+            rangeslider=dict(visible=True),
+            type="date"
+        ),
+        yaxis=dict(
+            autorange=True,
+            fixedrange=False
+        ),
+        hovermode='closest'
     )
 
-    # Parity Ratio Plot
+    # Parity Ratio Plot with animation
     parity_fig = go.Figure()
     parity_fig.add_trace(
         go.Scatter(
@@ -280,6 +460,7 @@ def update_plots(n, time_window_minutes):
             name="Parity Ratio",
             line=dict(color="#3498db", width=2),
             marker=dict(size=4),
+            connectgaps=True,
         )
     )
     parity_fig.add_hline(
@@ -292,9 +473,17 @@ def update_plots(n, time_window_minutes):
         template="plotly_white",
         height=300,
         yaxis=dict(range=[0, 1]),
+        # Add animation and transitions
+        transition={'duration': 500, 'easing': 'cubic-in-out'},
+        xaxis=dict(
+            autorange=True,
+            rangeslider=dict(visible=True),
+            type="date"
+        ),
+        hovermode='closest'
     )
 
-    # Witness Channels 1 (LO Amplitude & Polarization)
+    # Witness Channels 1 (LO Amplitude & Polarization) with animation
     witness1_fig = go.Figure()
     witness1_fig.add_trace(
         go.Scatter(
@@ -305,6 +494,7 @@ def update_plots(n, time_window_minutes):
             line=dict(color="#f39c12", width=2),
             marker=dict(size=4),
             yaxis="y",
+            connectgaps=True,
         )
     )
     witness1_fig.add_trace(
@@ -316,6 +506,7 @@ def update_plots(n, time_window_minutes):
             line=dict(color="#9b59b6", width=2),
             marker=dict(size=4),
             yaxis="y2",
+            connectgaps=True,
         )
     )
     witness1_fig.update_layout(
@@ -325,9 +516,16 @@ def update_plots(n, time_window_minutes):
         yaxis2=dict(title="Polarization (°)", side="right", overlaying="y"),
         template="plotly_white",
         height=300,
+        # Add animation and transitions
+        transition={'duration': 500, 'easing': 'cubic-in-out'},
+        xaxis=dict(
+            autorange=True,
+            type="date"
+        ),
+        hovermode='closest'
     )
 
-    # Witness Channels 2 (B-field & Temperature)
+    # Witness Channels 2 (B-field & Temperature) with animation
     witness2_fig = go.Figure()
     witness2_fig.add_trace(
         go.Scatter(
@@ -338,6 +536,7 @@ def update_plots(n, time_window_minutes):
             line=dict(color="#1abc9c", width=2),
             marker=dict(size=4),
             yaxis="y",
+            connectgaps=True,
         )
     )
     witness2_fig.add_trace(
@@ -349,6 +548,7 @@ def update_plots(n, time_window_minutes):
             line=dict(color="#e67e22", width=2),
             marker=dict(size=4),
             yaxis="y2",
+            connectgaps=True,
         )
     )
     witness2_fig.update_layout(
@@ -358,7 +558,17 @@ def update_plots(n, time_window_minutes):
         yaxis2=dict(title="Temperature (K)", side="right", overlaying="y"),
         template="plotly_white",
         height=300,
+        # Add animation and transitions
+        transition={'duration': 500, 'easing': 'cubic-in-out'},
+        xaxis=dict(
+            autorange=True,
+            type="date"
+        ),
+        hovermode='closest'
     )
+
+    # CCC Clock Live Animation
+    ccc_anim_fig = create_ccc_live_animation(n, filtered_times, filtered_snr, filtered_parity)
 
     # System Status
     latest_snr = filtered_snr[-1] if filtered_snr else 0
@@ -388,7 +598,7 @@ def update_plots(n, time_window_minutes):
         ]
     )
 
-    return snr_fig, parity_fig, witness1_fig, witness2_fig, status_div
+    return snr_fig, parity_fig, witness1_fig, witness2_fig, ccc_anim_fig, status_div
 
 
 @callback(

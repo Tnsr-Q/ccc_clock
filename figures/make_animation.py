@@ -6,16 +6,19 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 from matplotlib.patches import Circle, FancyArrowPatch
+import os
 import sys
-sys.path.append('/home/ubuntu/figures')
+# Add current directory to path for style_config import
+current_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, current_dir)
 from style_config import *
 
 def create_animated_explainer():
     setup_matplotlib_style()
     
     # Animation parameters
-    duration = 25  # seconds
-    fps = 10
+    duration = 5  # seconds (reduced from 25)
+    fps = 8       # reduced from 10
     n_frames = duration * fps
     
     # Create figure with subplots
@@ -222,14 +225,19 @@ def save_animation():
     """Save animation in multiple formats"""
     anim, fig = create_animated_explainer()
     
+    # Create output directory
+    output_dir = os.path.join(os.path.dirname(__file__), 'output')
+    os.makedirs(output_dir, exist_ok=True)
+    
     # Check available writers
     print("Available writers:", list(animation.writers.list()))
     
     try:
         # Save as GIF (most reliable)
         print("Saving animation as GIF...")
-        anim.save('/home/ubuntu/figures/ccc_explainer.gif', writer='pillow', fps=8)
-        print("GIF saved successfully!")
+        gif_path = os.path.join(output_dir, 'ccc_explainer.gif')
+        anim.save(gif_path, writer='pillow', fps=8)
+        print(f"GIF saved successfully at: {gif_path}")
     except Exception as e:
         print(f"GIF save failed: {e}")
     
@@ -237,10 +245,11 @@ def save_animation():
         # Try to save as MP4 if ffmpeg is available
         if 'ffmpeg' in animation.writers.list():
             print("Saving animation as MP4...")
+            mp4_path = os.path.join(output_dir, 'ccc_explainer.mp4')
             Writer = animation.writers['ffmpeg']
             writer = Writer(fps=10, metadata=dict(artist='CCC Clock System'), bitrate=1800)
-            anim.save('/home/ubuntu/figures/ccc_explainer.mp4', writer=writer)
-            print("MP4 saved successfully!")
+            anim.save(mp4_path, writer=writer)
+            print(f"MP4 saved successfully at: {mp4_path}")
         else:
             print("ffmpeg not available, skipping MP4")
     except Exception as e:
@@ -252,8 +261,8 @@ def save_animation():
         key_frames = [0, 50, 100, 150, 200]  # Sample frames
         for i, frame in enumerate(key_frames):
             if frame < anim._func(0).__len__():  # Check if frame exists
-                fig.savefig(f'/home/ubuntu/figures/animation_frame_{i:02d}.png', 
-                           dpi=150, bbox_inches='tight')
+                frame_path = os.path.join(output_dir, f'animation_frame_{i:02d}.png')
+                fig.savefig(frame_path, dpi=150, bbox_inches='tight')
         print("Static frames saved!")
     except Exception as e:
         print(f"Static frame save failed: {e}")

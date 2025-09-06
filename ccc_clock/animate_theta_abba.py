@@ -295,8 +295,9 @@ anim = animation.FuncAnimation(fig, animate_frame, frames=total_frames,
                              interval=1000/fps, blit=False, repeat=True)
 
 # Save animation
-output_path = os.path.join(os.path.dirname(__file__), 'figures', 'theta_abba_animation.mp4')
-os.makedirs(os.path.dirname(output_path), exist_ok=True)
+output_dir = os.path.join(os.path.dirname(__file__), 'figures', 'output')
+os.makedirs(output_dir, exist_ok=True)
+output_path = os.path.join(output_dir, 'theta_abba_animation.mp4')
 
 print(f"Saving animation to: {output_path}")
 print("This may take several minutes...")
@@ -315,8 +316,9 @@ except Exception as e:
     
     # Fallback to pillow writer
     try:
-        anim.save(output_path.replace('.mp4', '.gif'), writer='pillow', fps=fps//2)
-        print(f"Animation saved as GIF: {output_path.replace('.mp4', '.gif')}")
+        gif_path = os.path.join(output_dir, 'theta_abba_animation.gif')
+        anim.save(gif_path, writer='pillow', fps=fps//2)
+        print(f"Animation saved as GIF: {gif_path}")
     except Exception as e2:
         print(f"Error with fallback writer: {e2}")
 

@@ -1,6 +1,7 @@
 """
 Publication-grade styling configuration for CCC Clock visualization suite
 """
+import os
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 import plotly.graph_objects as go
@@ -124,8 +125,12 @@ FIGURE_SIZES = {
 
 def save_figure(fig, name, formats=['png', 'svg']):
     """Save figure in multiple formats with consistent naming"""
+    # Create output directory relative to this file
+    output_dir = os.path.join(os.path.dirname(__file__), 'output')
+    os.makedirs(output_dir, exist_ok=True)
+    
     for fmt in formats:
-        filename = f"/home/ubuntu/figures/{name}.{fmt}"
+        filename = os.path.join(output_dir, f"{name}.{fmt}")
         if hasattr(fig, 'savefig'):  # matplotlib
             fig.savefig(filename, format=fmt, dpi=300, bbox_inches='tight')
         else:  # plotly
@@ -135,7 +140,7 @@ def save_figure(fig, name, formats=['png', 'svg']):
                 fig.write_image(filename, width=1200, height=800, format='svg')
             elif fmt == 'html':
                 fig.write_html(filename)
-    print(f"Saved {name} in formats: {formats}")
+    print(f"Saved {name} in formats: {formats} at {output_dir}")
 
 # Initialize styles
 setup_matplotlib_style()
