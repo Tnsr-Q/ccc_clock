@@ -1,0 +1,640 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>metrology &mdash; CCC Clock Demonstration System 1.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=8d563738"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            CCC Clock Demonstration System
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Quick Start Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dashboard.html">Live Dashboard Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../animation.html">Animation System Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../validation.html">Validation and Testing</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">CCC Clock Demonstration System</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Module code</a></li>
+      <li class="breadcrumb-item active">metrology</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for metrology</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">CCC Clock Metrology Module</span>
+
+<span class="sd">Implements the core equations for Computational Complexity Cosmology (CCC)</span>
+<span class="sd">clock theory including operational curvature, SNR calculations, and ABBA</span>
+<span class="sd">demodulation simulation.</span>
+
+<span class="sd">Key equations:</span>
+<span class="sd">- Operational curvature: R_op = K_dot / (S_e_dot + S_loss_dot)</span>
+<span class="sd">- Clock observable: (Δf/f)_demod = Γ_Θ * R_op * A_Σ + systematics</span>
+<span class="sd">- SNR: SNR(τ) = (Γ_Θ * R_op * A_Σ) / (σ_0/√τ)</span>
+<span class="sd">- Time-to-detect: τ_req = (z_α * σ_0 / (Γ_Θ * R_op * A_Σ))²</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">warnings</span>
+<span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">dataclass</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+
+<div class="viewcode-block" id="ParameterSet">
+<a class="viewcode-back" href="../api.html#metrology.ParameterSet">[docs]</a>
+<span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">ParameterSet</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Parameter set for CCC clock experiments.&quot;&quot;&quot;</span>
+
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">K_dot</span><span class="p">:</span> <span class="nb">float</span>  <span class="c1"># Complexity flow rate (bits/s)</span>
+    <span class="n">S_loss_dot</span><span class="p">:</span> <span class="nb">float</span>  <span class="c1"># Entropy loss rate (bits/s)</span>
+    <span class="n">T</span><span class="p">:</span> <span class="nb">float</span>  <span class="c1"># Temperature (K)</span>
+    <span class="n">description</span><span class="p">:</span> <span class="nb">str</span>
+
+    <span class="k">def</span> <span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Validate parameters.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">K_dot</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;K_dot must be positive&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">S_loss_dot</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;S_loss_dot must be positive&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">T</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Temperature must be positive&quot;</span><span class="p">)</span></div>
+
+
+
+<span class="c1"># Standard parameter sets from mission brief</span>
+<span class="n">PARAMETER_SETS</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;A&quot;</span><span class="p">:</span> <span class="n">ParameterSet</span><span class="p">(</span>
+        <span class="n">name</span><span class="o">=</span><span class="s2">&quot;A (max signal)&quot;</span><span class="p">,</span>
+        <span class="n">K_dot</span><span class="o">=</span><span class="mf">1e10</span><span class="p">,</span>  <span class="c1"># bits/s</span>
+        <span class="n">S_loss_dot</span><span class="o">=</span><span class="mf">5e7</span><span class="p">,</span>  <span class="c1"># bits/s</span>
+        <span class="n">T</span><span class="o">=</span><span class="mi">77</span><span class="p">,</span>  <span class="c1"># K</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Maximum signal configuration with liquid nitrogen cooling&quot;</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="s2">&quot;B&quot;</span><span class="p">:</span> <span class="n">ParameterSet</span><span class="p">(</span>
+        <span class="n">name</span><span class="o">=</span><span class="s2">&quot;B (balanced)&quot;</span><span class="p">,</span>
+        <span class="n">K_dot</span><span class="o">=</span><span class="mf">3e9</span><span class="p">,</span>  <span class="c1"># bits/s</span>
+        <span class="n">S_loss_dot</span><span class="o">=</span><span class="mf">1e-12</span> <span class="o">*</span> <span class="mf">3e8</span> <span class="o">/</span> <span class="p">(</span><span class="mf">1.38e-23</span> <span class="o">*</span> <span class="mi">300</span><span class="p">),</span>  <span class="c1"># 1 pW at 300K converted to bits/s</span>
+        <span class="n">T</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span>  <span class="c1"># K</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Balanced configuration at room temperature&quot;</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="s2">&quot;C&quot;</span><span class="p">:</span> <span class="n">ParameterSet</span><span class="p">(</span>
+        <span class="n">name</span><span class="o">=</span><span class="s2">&quot;C (conservative)&quot;</span><span class="p">,</span>
+        <span class="n">K_dot</span><span class="o">=</span><span class="mf">1e9</span><span class="p">,</span>  <span class="c1"># bits/s</span>
+        <span class="n">S_loss_dot</span><span class="o">=</span><span class="mf">10e-12</span> <span class="o">*</span> <span class="mf">3e8</span> <span class="o">/</span> <span class="p">(</span><span class="mf">1.38e-23</span> <span class="o">*</span> <span class="mi">300</span><span class="p">),</span>  <span class="c1"># 10 pW at 300K converted to bits/s</span>
+        <span class="n">T</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span>  <span class="c1"># K</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Conservative configuration with higher dissipation&quot;</span><span class="p">,</span>
+    <span class="p">),</span>
+<span class="p">}</span>
+
+
+<div class="viewcode-block" id="CCCMetrology">
+<a class="viewcode-back" href="../api.html#metrology.CCCMetrology">[docs]</a>
+<span class="k">class</span> <span class="nc">CCCMetrology</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Main class for CCC clock metrology calculations.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="CCCMetrology.__init__">
+<a class="viewcode-back" href="../api.html#metrology.CCCMetrology.__init__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Gamma_Theta</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-6</span><span class="p">,</span> <span class="n">kappa</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize CCC metrology calculator.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            Gamma_Theta: Platform transfer factor for Θ-only loops</span>
+<span class="sd">            kappa: Operational geometry coupling constant</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Gamma_Theta</span> <span class="o">=</span> <span class="n">Gamma_Theta</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kappa</span> <span class="o">=</span> <span class="n">kappa</span></div>
+
+
+<div class="viewcode-block" id="CCCMetrology.compute_operational_curvature">
+<a class="viewcode-back" href="../api.html#metrology.CCCMetrology.compute_operational_curvature">[docs]</a>
+    <span class="k">def</span> <span class="nf">compute_operational_curvature</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">:</span> <span class="n">ParameterSet</span><span class="p">,</span> <span class="n">S_e_dot</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute operational curvature ratio R_op = K_dot / (S_e_dot + S_loss_dot).</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            params: Parameter set</span>
+<span class="sd">            S_e_dot: Semantic/mutual information rate (bits/s). If None, uses K_dot/10</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Operational curvature ratio (dimensionless)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">S_e_dot</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># Default assumption: semantic rate is 10% of complexity rate</span>
+            <span class="n">S_e_dot</span> <span class="o">=</span> <span class="n">params</span><span class="o">.</span><span class="n">K_dot</span> <span class="o">/</span> <span class="mi">10</span>
+
+        <span class="n">denominator</span> <span class="o">=</span> <span class="n">S_e_dot</span> <span class="o">+</span> <span class="n">params</span><span class="o">.</span><span class="n">S_loss_dot</span>
+        <span class="k">if</span> <span class="n">denominator</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Denominator S_e_dot + S_loss_dot &lt;= 0, using regularization&quot;</span><span class="p">)</span>
+            <span class="n">denominator</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">denominator</span><span class="p">,</span> <span class="mf">1e-10</span><span class="p">)</span>
+
+        <span class="n">R_op</span> <span class="o">=</span> <span class="n">params</span><span class="o">.</span><span class="n">K_dot</span> <span class="o">/</span> <span class="n">denominator</span>
+        <span class="k">return</span> <span class="n">R_op</span></div>
+
+
+<div class="viewcode-block" id="CCCMetrology.compute_clock_observable">
+<a class="viewcode-back" href="../api.html#metrology.CCCMetrology.compute_clock_observable">[docs]</a>
+    <span class="k">def</span> <span class="nf">compute_clock_observable</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">params</span><span class="p">:</span> <span class="n">ParameterSet</span><span class="p">,</span>
+        <span class="n">A_Sigma</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">systematics</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
+        <span class="n">S_e_dot</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute clock observable (Δf/f)_demod = Γ_Θ * R_op * A_Σ + systematics.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            params: Parameter set</span>
+<span class="sd">            A_Sigma: Loop area in (ln r*, θ) space</span>
+<span class="sd">            systematics: Systematic error contribution</span>
+<span class="sd">            S_e_dot: Semantic information rate</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Fractional frequency shift</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">R_op</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_operational_curvature</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">S_e_dot</span><span class="p">)</span>
+        <span class="n">signal</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Gamma_Theta</span> <span class="o">*</span> <span class="n">R_op</span> <span class="o">*</span> <span class="n">A_Sigma</span>
+        <span class="k">return</span> <span class="n">signal</span> <span class="o">+</span> <span class="n">systematics</span></div>
+
+
+<div class="viewcode-block" id="CCCMetrology.compute_snr">
+<a class="viewcode-back" href="../api.html#metrology.CCCMetrology.compute_snr">[docs]</a>
+    <span class="k">def</span> <span class="nf">compute_snr</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">params</span><span class="p">:</span> <span class="n">ParameterSet</span><span class="p">,</span>
+        <span class="n">A_Sigma</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">sigma_0</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">tau</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">S_e_dot</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute signal-to-noise ratio SNR(τ) = (Γ_Θ * R_op * A_Σ) / (σ_0/√τ).</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            params: Parameter set</span>
+<span class="sd">            A_Sigma: Loop area</span>
+<span class="sd">            sigma_0: Allan deviation coefficient</span>
+<span class="sd">            tau: Integration time (s)</span>
+<span class="sd">            S_e_dot: Semantic information rate</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Signal-to-noise ratio</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">R_op</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_operational_curvature</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">S_e_dot</span><span class="p">)</span>
+        <span class="n">signal</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Gamma_Theta</span> <span class="o">*</span> <span class="n">R_op</span> <span class="o">*</span> <span class="n">A_Sigma</span>
+        <span class="n">noise</span> <span class="o">=</span> <span class="n">sigma_0</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">tau</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">signal</span> <span class="o">/</span> <span class="n">noise</span></div>
+
+
+<div class="viewcode-block" id="CCCMetrology.compute_time_to_detect">
+<a class="viewcode-back" href="../api.html#metrology.CCCMetrology.compute_time_to_detect">[docs]</a>
+    <span class="k">def</span> <span class="nf">compute_time_to_detect</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">params</span><span class="p">:</span> <span class="n">ParameterSet</span><span class="p">,</span>
+        <span class="n">A_Sigma</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">sigma_0</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">z_alpha</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">3.0</span><span class="p">,</span>
+        <span class="n">S_e_dot</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute time-to-detect τ_req = (z_α * σ_0 / (Γ_Θ * R_op * A_Σ))².</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            params: Parameter set</span>
+<span class="sd">            A_Sigma: Loop area</span>
+<span class="sd">            sigma_0: Allan deviation coefficient</span>
+<span class="sd">            z_alpha: Detection threshold (standard deviations)</span>
+<span class="sd">            S_e_dot: Semantic information rate</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Required integration time (s)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">R_op</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_operational_curvature</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">S_e_dot</span><span class="p">)</span>
+        <span class="n">signal</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Gamma_Theta</span> <span class="o">*</span> <span class="n">R_op</span> <span class="o">*</span> <span class="n">A_Sigma</span>
+
+        <span class="k">if</span> <span class="n">signal</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span>
+
+        <span class="n">tau_req</span> <span class="o">=</span> <span class="p">(</span><span class="n">z_alpha</span> <span class="o">*</span> <span class="n">sigma_0</span> <span class="o">/</span> <span class="n">signal</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+        <span class="k">return</span> <span class="n">tau_req</span></div>
+
+
+<div class="viewcode-block" id="CCCMetrology.sensitivity_analysis">
+<a class="viewcode-back" href="../api.html#metrology.CCCMetrology.sensitivity_analysis">[docs]</a>
+    <span class="k">def</span> <span class="nf">sensitivity_analysis</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">A_Sigma_range</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">sigma_0_values</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="mf">1e-17</span><span class="p">,</span> <span class="mf">3e-18</span><span class="p">],</span>
+        <span class="n">z_alpha</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">3.0</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Perform comprehensive sensitivity analysis across parameter space.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            A_Sigma_range: Array of loop areas to test</span>
+<span class="sd">            sigma_0_values: List of Allan deviation coefficients</span>
+<span class="sd">            z_alpha: Detection threshold</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Dictionary with analysis results</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;A_Sigma&quot;</span><span class="p">:</span> <span class="n">A_Sigma_range</span><span class="p">,</span>
+            <span class="s2">&quot;sigma_0_values&quot;</span><span class="p">:</span> <span class="n">sigma_0_values</span><span class="p">,</span>
+            <span class="s2">&quot;parameter_sets&quot;</span><span class="p">:</span> <span class="p">{},</span>
+            <span class="s2">&quot;acceptance_A1_met&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="p">}</span>
+
+        <span class="k">for</span> <span class="n">param_name</span><span class="p">,</span> <span class="n">params</span> <span class="ow">in</span> <span class="n">PARAMETER_SETS</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">param_results</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s2">&quot;R_op&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_operational_curvature</span><span class="p">(</span><span class="n">params</span><span class="p">),</span>
+                <span class="s2">&quot;tau_req_matrix&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">sigma_0_values</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">A_Sigma_range</span><span class="p">))),</span>
+                <span class="s2">&quot;snr_matrix&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">sigma_0_values</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">A_Sigma_range</span><span class="p">))),</span>
+            <span class="p">}</span>
+
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">sigma_0</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">sigma_0_values</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">A_Sigma</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">A_Sigma_range</span><span class="p">):</span>
+                    <span class="n">tau_req</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_time_to_detect</span><span class="p">(</span>
+                        <span class="n">params</span><span class="p">,</span> <span class="n">A_Sigma</span><span class="p">,</span> <span class="n">sigma_0</span><span class="p">,</span> <span class="n">z_alpha</span>
+                    <span class="p">)</span>
+                    <span class="n">param_results</span><span class="p">[</span><span class="s2">&quot;tau_req_matrix&quot;</span><span class="p">][</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">tau_req</span>
+
+                    <span class="c1"># Check A1 acceptance criterion (τ_req ≤ 72h)</span>
+                    <span class="k">if</span> <span class="n">tau_req</span> <span class="o">&lt;=</span> <span class="mi">72</span> <span class="o">*</span> <span class="mi">3600</span> <span class="ow">and</span> <span class="n">sigma_0</span> <span class="o">==</span> <span class="mf">3e-18</span><span class="p">:</span>
+                        <span class="n">results</span><span class="p">[</span><span class="s2">&quot;acceptance_A1_met&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+
+                    <span class="c1"># Compute SNR at 1 day integration</span>
+                    <span class="n">snr_1day</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_snr</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">A_Sigma</span><span class="p">,</span> <span class="n">sigma_0</span><span class="p">,</span> <span class="mi">24</span> <span class="o">*</span> <span class="mi">3600</span><span class="p">)</span>
+                    <span class="n">param_results</span><span class="p">[</span><span class="s2">&quot;snr_matrix&quot;</span><span class="p">][</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">snr_1day</span>
+
+            <span class="n">results</span><span class="p">[</span><span class="s2">&quot;parameter_sets&quot;</span><span class="p">][</span><span class="n">param_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">param_results</span>
+
+        <span class="k">return</span> <span class="n">results</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="ABBASimulator">
+<a class="viewcode-back" href="../api.html#metrology.ABBASimulator">[docs]</a>
+<span class="k">class</span> <span class="nc">ABBASimulator</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Simulator for ABBA demodulation sequences.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="ABBASimulator.__init__">
+<a class="viewcode-back" href="../api.html#metrology.ABBASimulator.__init__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">f_m</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">,</span> <span class="n">cycle_time</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">10.0</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize ABBA simulator.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            f_m: Modulation frequency (Hz)</span>
+<span class="sd">            cycle_time: Total cycle time (s)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">f_m</span> <span class="o">=</span> <span class="n">f_m</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cycle_time</span> <span class="o">=</span> <span class="n">cycle_time</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dt</span> <span class="o">=</span> <span class="n">cycle_time</span> <span class="o">/</span> <span class="mi">1000</span>  <span class="c1"># Time resolution</span></div>
+
+
+<div class="viewcode-block" id="ABBASimulator.generate_abba_sequence">
+<a class="viewcode-back" href="../api.html#metrology.ABBASimulator.generate_abba_sequence">[docs]</a>
+    <span class="k">def</span> <span class="nf">generate_abba_sequence</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">duration</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generate ABBA modulation sequence.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            duration: Total duration (s)</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Tuple of (time_array, modulation_sequence)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">duration</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dt</span><span class="p">)</span>
+
+        <span class="c1"># ABBA pattern: +1, +1, -1, -1 repeating</span>
+        <span class="n">cycle_samples</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cycle_time</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">dt</span><span class="p">)</span>
+        <span class="n">quarter_cycle</span> <span class="o">=</span> <span class="n">cycle_samples</span> <span class="o">//</span> <span class="mi">4</span>
+
+        <span class="n">modulation</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">t</span><span class="p">)):</span>
+            <span class="n">cycle_pos</span> <span class="o">=</span> <span class="n">i</span> <span class="o">%</span> <span class="n">cycle_samples</span>
+            <span class="k">if</span> <span class="n">cycle_pos</span> <span class="o">&lt;</span> <span class="n">quarter_cycle</span><span class="p">:</span>  <span class="c1"># A</span>
+                <span class="n">modulation</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="k">elif</span> <span class="n">cycle_pos</span> <span class="o">&lt;</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">quarter_cycle</span><span class="p">:</span>  <span class="c1"># B</span>
+                <span class="n">modulation</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="k">elif</span> <span class="n">cycle_pos</span> <span class="o">&lt;</span> <span class="mi">3</span> <span class="o">*</span> <span class="n">quarter_cycle</span><span class="p">:</span>  <span class="c1"># B (reversed)</span>
+                <span class="n">modulation</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+            <span class="k">else</span><span class="p">:</span>  <span class="c1"># A (reversed)</span>
+                <span class="n">modulation</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+
+        <span class="k">return</span> <span class="n">t</span><span class="p">,</span> <span class="n">modulation</span></div>
+
+
+<div class="viewcode-block" id="ABBASimulator.simulate_lock_in_trace">
+<a class="viewcode-back" href="../api.html#metrology.ABBASimulator.simulate_lock_in_trace">[docs]</a>
+    <span class="k">def</span> <span class="nf">simulate_lock_in_trace</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">params</span><span class="p">:</span> <span class="n">ParameterSet</span><span class="p">,</span>
+        <span class="n">A_Sigma</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">duration</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">3600</span><span class="p">,</span>
+        <span class="n">sigma_0</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">3e-18</span><span class="p">,</span>
+        <span class="n">loop_reversed</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">systematics_amplitude</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-19</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Simulate lock-in amplifier trace with ABBA demodulation.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            params: Parameter set</span>
+<span class="sd">            A_Sigma: Loop area</span>
+<span class="sd">            duration: Measurement duration (s)</span>
+<span class="sd">            sigma_0: Allan deviation coefficient</span>
+<span class="sd">            loop_reversed: Whether loop is reversed (sign flip test)</span>
+<span class="sd">            systematics_amplitude: Amplitude of systematic errors</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Dictionary with simulation results</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">metrology</span> <span class="o">=</span> <span class="n">CCCMetrology</span><span class="p">()</span>
+
+        <span class="c1"># Generate time base and modulation</span>
+        <span class="n">t</span><span class="p">,</span> <span class="n">modulation</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">generate_abba_sequence</span><span class="p">(</span><span class="n">duration</span><span class="p">)</span>
+
+        <span class="c1"># Compute CCC signal</span>
+        <span class="n">R_op</span> <span class="o">=</span> <span class="n">metrology</span><span class="o">.</span><span class="n">compute_operational_curvature</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
+        <span class="n">ccc_signal</span> <span class="o">=</span> <span class="n">metrology</span><span class="o">.</span><span class="n">Gamma_Theta</span> <span class="o">*</span> <span class="n">R_op</span> <span class="o">*</span> <span class="n">A_Sigma</span>
+
+        <span class="c1"># Apply loop reversal (sign flip)</span>
+        <span class="k">if</span> <span class="n">loop_reversed</span><span class="p">:</span>
+            <span class="n">ccc_signal</span> <span class="o">*=</span> <span class="o">-</span><span class="mi">1</span>
+
+        <span class="c1"># Generate systematic errors (don&#39;t flip with loop reversal)</span>
+        <span class="n">systematics</span> <span class="o">=</span> <span class="n">systematics_amplitude</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="mf">0.1</span> <span class="o">*</span> <span class="n">t</span><span class="p">)</span>  <span class="c1"># Slow drift</span>
+        <span class="n">systematics</span> <span class="o">+=</span> <span class="p">(</span>
+            <span class="n">systematics_amplitude</span>
+            <span class="o">*</span> <span class="mf">0.5</span>
+            <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="mf">1.0</span> <span class="o">*</span> <span class="n">t</span><span class="p">)</span>  <span class="c1"># Faster oscillation</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Generate noise</span>
+        <span class="n">noise_std</span> <span class="o">=</span> <span class="n">sigma_0</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dt</span><span class="p">)</span>  <span class="c1"># Scale noise for time resolution</span>
+        <span class="n">noise</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">noise_std</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">t</span><span class="p">))</span>
+
+        <span class="c1"># Total signal</span>
+        <span class="n">total_signal</span> <span class="o">=</span> <span class="n">ccc_signal</span> <span class="o">*</span> <span class="n">modulation</span> <span class="o">+</span> <span class="n">systematics</span> <span class="o">+</span> <span class="n">noise</span>
+
+        <span class="c1"># Lock-in demodulation</span>
+        <span class="n">demod_signal</span> <span class="o">=</span> <span class="n">total_signal</span> <span class="o">*</span> <span class="n">modulation</span>
+
+        <span class="c1"># Low-pass filter (simple moving average)</span>
+        <span class="n">filter_window</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="mf">1.0</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">dt</span><span class="p">)</span>  <span class="c1"># 1 second window</span>
+        <span class="n">demod_filtered</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">convolve</span><span class="p">(</span>
+            <span class="n">demod_signal</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">filter_window</span><span class="p">)</span> <span class="o">/</span> <span class="n">filter_window</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;same&quot;</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Compute running average for SNR estimation</span>
+        <span class="n">tau_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logspace</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">duration</span> <span class="o">/</span> <span class="mi">10</span><span class="p">),</span> <span class="mi">50</span><span class="p">)</span>  <span class="c1"># 10s to duration/10</span>
+        <span class="n">snr_values</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">tau</span> <span class="ow">in</span> <span class="n">tau_values</span><span class="p">:</span>
+            <span class="n">window_samples</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">tau</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">dt</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">window_samples</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">demod_filtered</span><span class="p">):</span>
+                <span class="n">windowed_mean</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">demod_filtered</span><span class="p">[</span><span class="o">-</span><span class="n">window_samples</span><span class="p">:])</span>
+                <span class="n">windowed_std</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">demod_filtered</span><span class="p">[</span><span class="o">-</span><span class="n">window_samples</span><span class="p">:])</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span>
+                    <span class="n">window_samples</span>
+                <span class="p">)</span>
+                <span class="n">snr</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">windowed_mean</span><span class="p">)</span> <span class="o">/</span> <span class="n">windowed_std</span> <span class="k">if</span> <span class="n">windowed_std</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="mi">0</span>
+                <span class="n">snr_values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">snr</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">snr_values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;time&quot;</span><span class="p">:</span> <span class="n">t</span><span class="p">,</span>
+            <span class="s2">&quot;modulation&quot;</span><span class="p">:</span> <span class="n">modulation</span><span class="p">,</span>
+            <span class="s2">&quot;total_signal&quot;</span><span class="p">:</span> <span class="n">total_signal</span><span class="p">,</span>
+            <span class="s2">&quot;demod_filtered&quot;</span><span class="p">:</span> <span class="n">demod_filtered</span><span class="p">,</span>
+            <span class="s2">&quot;ccc_signal_amplitude&quot;</span><span class="p">:</span> <span class="n">ccc_signal</span><span class="p">,</span>
+            <span class="s2">&quot;loop_reversed&quot;</span><span class="p">:</span> <span class="n">loop_reversed</span><span class="p">,</span>
+            <span class="s2">&quot;tau_values&quot;</span><span class="p">:</span> <span class="n">tau_values</span><span class="p">,</span>
+            <span class="s2">&quot;snr_values&quot;</span><span class="p">:</span> <span class="n">snr_values</span><span class="p">,</span>
+            <span class="s2">&quot;final_demod_value&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span>
+                <span class="n">demod_filtered</span><span class="p">[</span><span class="o">-</span><span class="nb">int</span><span class="p">(</span><span class="mi">60</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">dt</span><span class="p">)</span> <span class="p">:]</span>
+            <span class="p">),</span>  <span class="c1"># Last minute average</span>
+            <span class="s2">&quot;theoretical_snr&quot;</span><span class="p">:</span> <span class="n">metrology</span><span class="o">.</span><span class="n">compute_snr</span><span class="p">(</span>
+                <span class="n">params</span><span class="p">,</span> <span class="n">A_Sigma</span><span class="p">,</span> <span class="n">sigma_0</span><span class="p">,</span> <span class="n">duration</span>
+            <span class="p">),</span>
+        <span class="p">}</span></div>
+
+
+<div class="viewcode-block" id="ABBASimulator.demonstrate_sign_flip">
+<a class="viewcode-back" href="../api.html#metrology.ABBASimulator.demonstrate_sign_flip">[docs]</a>
+    <span class="k">def</span> <span class="nf">demonstrate_sign_flip</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">:</span> <span class="n">ParameterSet</span><span class="p">,</span> <span class="n">A_Sigma</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">duration</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">1800</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Demonstrate sign flip under loop reversal (A3 acceptance criterion).</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            params: Parameter set</span>
+<span class="sd">            A_Sigma: Loop area</span>
+<span class="sd">            duration: Duration for each measurement</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Dictionary with both normal and reversed traces</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Normal loop</span>
+        <span class="n">trace_normal</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulate_lock_in_trace</span><span class="p">(</span>
+            <span class="n">params</span><span class="p">,</span> <span class="n">A_Sigma</span><span class="p">,</span> <span class="n">duration</span><span class="p">,</span> <span class="n">loop_reversed</span><span class="o">=</span><span class="kc">False</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Reversed loop</span>
+        <span class="n">trace_reversed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulate_lock_in_trace</span><span class="p">(</span>
+            <span class="n">params</span><span class="p">,</span> <span class="n">A_Sigma</span><span class="p">,</span> <span class="n">duration</span><span class="p">,</span> <span class="n">loop_reversed</span><span class="o">=</span><span class="kc">True</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Verify sign flip</span>
+        <span class="n">sign_flip_detected</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">trace_normal</span><span class="p">[</span><span class="s2">&quot;final_demod_value&quot;</span><span class="p">])</span> <span class="o">!=</span> <span class="n">np</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span>
+            <span class="n">trace_reversed</span><span class="p">[</span><span class="s2">&quot;final_demod_value&quot;</span><span class="p">]</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;normal&quot;</span><span class="p">:</span> <span class="n">trace_normal</span><span class="p">,</span>
+            <span class="s2">&quot;reversed&quot;</span><span class="p">:</span> <span class="n">trace_reversed</span><span class="p">,</span>
+            <span class="s2">&quot;sign_flip_detected&quot;</span><span class="p">:</span> <span class="n">sign_flip_detected</span><span class="p">,</span>
+            <span class="s2">&quot;ratio&quot;</span><span class="p">:</span> <span class="n">trace_reversed</span><span class="p">[</span><span class="s2">&quot;final_demod_value&quot;</span><span class="p">]</span>
+            <span class="o">/</span> <span class="n">trace_normal</span><span class="p">[</span><span class="s2">&quot;final_demod_value&quot;</span><span class="p">],</span>
+        <span class="p">}</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="compute_operational_curvature">
+<a class="viewcode-back" href="../api.html#metrology.compute_operational_curvature">[docs]</a>
+<span class="k">def</span> <span class="nf">compute_operational_curvature</span><span class="p">(</span>
+    <span class="n">K_dot</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">S_e_dot</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">S_loss_dot</span><span class="p">:</span> <span class="nb">float</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Standalone function to compute operational curvature ratio.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">K_dot</span> <span class="o">/</span> <span class="p">(</span><span class="n">S_e_dot</span> <span class="o">+</span> <span class="n">S_loss_dot</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="compute_snr">
+<a class="viewcode-back" href="../api.html#metrology.compute_snr">[docs]</a>
+<span class="k">def</span> <span class="nf">compute_snr</span><span class="p">(</span>
+    <span class="n">Gamma_Theta</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">R_op</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">A_Sigma</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">sigma_0</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">tau</span><span class="p">:</span> <span class="nb">float</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Standalone function to compute SNR.&quot;&quot;&quot;</span>
+    <span class="n">signal</span> <span class="o">=</span> <span class="n">Gamma_Theta</span> <span class="o">*</span> <span class="n">R_op</span> <span class="o">*</span> <span class="n">A_Sigma</span>
+    <span class="n">noise</span> <span class="o">=</span> <span class="n">sigma_0</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">tau</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">signal</span> <span class="o">/</span> <span class="n">noise</span></div>
+
+
+
+<div class="viewcode-block" id="compute_time_to_detect">
+<a class="viewcode-back" href="../api.html#metrology.compute_time_to_detect">[docs]</a>
+<span class="k">def</span> <span class="nf">compute_time_to_detect</span><span class="p">(</span>
+    <span class="n">Gamma_Theta</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">R_op</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">A_Sigma</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">sigma_0</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">z_alpha</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">3.0</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Standalone function to compute time-to-detect.&quot;&quot;&quot;</span>
+    <span class="n">signal</span> <span class="o">=</span> <span class="n">Gamma_Theta</span> <span class="o">*</span> <span class="n">R_op</span> <span class="o">*</span> <span class="n">A_Sigma</span>
+    <span class="k">if</span> <span class="n">signal</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">z_alpha</span> <span class="o">*</span> <span class="n">sigma_0</span> <span class="o">/</span> <span class="n">signal</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span></div>
+
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="c1"># Self-test and validation</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;🧪 Testing CCC Metrology Module&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;=&quot;</span> <span class="o">*</span> <span class="mi">50</span><span class="p">)</span>
+
+    <span class="c1"># Initialize metrology</span>
+    <span class="n">metrology</span> <span class="o">=</span> <span class="n">CCCMetrology</span><span class="p">()</span>
+
+    <span class="c1"># Test parameter sets</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">📊 Parameter Set Analysis:&quot;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">params</span> <span class="ow">in</span> <span class="n">PARAMETER_SETS</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">R_op</span> <span class="o">=</span> <span class="n">metrology</span><span class="o">.</span><span class="n">compute_operational_curvature</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  </span><span class="si">{</span><span class="n">params</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">: R_op = </span><span class="si">{</span><span class="n">R_op</span><span class="si">:</span><span class="s2">.2e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Test time-to-detect for A1 criterion</span>
+        <span class="n">A_Sigma</span> <span class="o">=</span> <span class="mf">1e-6</span>  <span class="c1"># Example loop area</span>
+        <span class="n">sigma_0</span> <span class="o">=</span> <span class="mf">3e-18</span>
+        <span class="n">tau_req</span> <span class="o">=</span> <span class="n">metrology</span><span class="o">.</span><span class="n">compute_time_to_detect</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">A_Sigma</span><span class="p">,</span> <span class="n">sigma_0</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;    τ_req = </span><span class="si">{</span><span class="n">tau_req</span><span class="o">/</span><span class="mi">3600</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2"> hours (A_Σ=</span><span class="si">{</span><span class="n">A_Sigma</span><span class="si">:</span><span class="s2">.0e</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">tau_req</span> <span class="o">&lt;=</span> <span class="mi">72</span> <span class="o">*</span> <span class="mi">3600</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;    ✅ A1 criterion met!&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;    ❌ A1 criterion not met (need larger A_Σ or better params)&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Test ABBA simulator</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">🔄 Testing ABBA Simulator:&quot;</span><span class="p">)</span>
+    <span class="n">simulator</span> <span class="o">=</span> <span class="n">ABBASimulator</span><span class="p">(</span><span class="n">f_m</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+
+    <span class="c1"># Quick sign flip test</span>
+    <span class="n">params_test</span> <span class="o">=</span> <span class="n">PARAMETER_SETS</span><span class="p">[</span><span class="s2">&quot;A&quot;</span><span class="p">]</span>
+    <span class="n">sign_flip_demo</span> <span class="o">=</span> <span class="n">simulator</span><span class="o">.</span><span class="n">demonstrate_sign_flip</span><span class="p">(</span>
+        <span class="n">params_test</span><span class="p">,</span> <span class="n">A_Sigma</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">,</span> <span class="n">duration</span><span class="o">=</span><span class="mi">300</span>
+    <span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Sign flip detected: </span><span class="si">{</span><span class="n">sign_flip_demo</span><span class="p">[</span><span class="s1">&#39;sign_flip_detected&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Ratio (reversed/normal): </span><span class="si">{</span><span class="n">sign_flip_demo</span><span class="p">[</span><span class="s1">&#39;ratio&#39;</span><span class="p">]</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">sign_flip_demo</span><span class="p">[</span><span class="s2">&quot;sign_flip_detected&quot;</span><span class="p">]:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;  ✅ A3 criterion: Sign flip under loop reversal confirmed!&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;  ❌ A3 criterion: Sign flip not detected (may need longer integration)&quot;</span><span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">✅ CCC Metrology module tests completed!&quot;</span><span class="p">)</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, CCC Clock Development Team.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

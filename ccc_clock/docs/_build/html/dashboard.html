@@ -1,0 +1,276 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Live Dashboard Documentation &mdash; CCC Clock Demonstration System 1.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=8d563738"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Animation System Documentation" href="animation.html" />
+    <link rel="prev" title="API Reference" href="api.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            CCC Clock Demonstration System
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quick Start Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API Reference</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Live Dashboard Documentation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#features">Features</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#usage">Usage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#dashboard-components">Dashboard Components</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#customization">Customization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#deployment">Deployment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#troubleshooting">Troubleshooting</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="animation.html">Animation System Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="validation.html">Validation and Testing</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">CCC Clock Demonstration System</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Live Dashboard Documentation</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/dashboard.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="live-dashboard-documentation">
+<h1>Live Dashboard Documentation<a class="headerlink" href="#live-dashboard-documentation" title="Link to this heading"></a></h1>
+<p>The CCC Clock Live Dashboard provides real-time monitoring of all system parameters with interactive controls and professional visualization.</p>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Link to this heading"></a></h2>
+<p>The dashboard displays:</p>
+<ul class="simple">
+<li><p><strong>Demodulation SNR</strong>: Real-time signal-to-noise ratio tracking</p></li>
+<li><p><strong>Parity Ratio</strong>: ABBA protocol validation with statistical analysis</p></li>
+<li><p><strong>Witness Channels</strong>: LO amplitude, polarization, B-field, temperature</p></li>
+<li><p><strong>System Status</strong>: Overall health monitoring with alerts</p></li>
+</ul>
+</section>
+<section id="features">
+<h2>Features<a class="headerlink" href="#features" title="Link to this heading"></a></h2>
+<p><strong>Real-time Updates</strong>
+- Configurable refresh rates (0.5-10 seconds)
+- Adjustable time windows (1-60 minutes)
+- Automatic data buffering with 1000-point history</p>
+<p><strong>Interactive Controls</strong>
+- Update interval slider
+- Time window adjustment
+- Parameter threshold settings
+- Export functionality for data and plots</p>
+<p><strong>Professional Visualization</strong>
+- High-quality Plotly graphics
+- Responsive layout for different screen sizes
+- Color-coded status indicators
+- Statistical overlays and trend analysis</p>
+<p><strong>WebSocket Support</strong>
+- Live data streaming capability
+- Low-latency updates
+- Scalable to multiple clients
+- Robust connection handling</p>
+</section>
+<section id="usage">
+<h2>Usage<a class="headerlink" href="#usage" title="Link to this heading"></a></h2>
+<p><strong>Starting the Dashboard</strong>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">dashboard</span><span class="o">.</span><span class="n">py</span>
+</pre></div>
+</div>
+<p>The dashboard will be available at <a class="reference external" href="http://localhost:8050">http://localhost:8050</a></p>
+<p><strong>Configuration Options</strong>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">dashboard</span><span class="o">.</span><span class="n">py</span> <span class="o">--</span><span class="n">port</span> <span class="mi">8050</span> <span class="o">--</span><span class="n">host</span> <span class="mf">0.0.0.0</span> <span class="o">--</span><span class="n">debug</span>
+</pre></div>
+</div>
+<p><strong>Integration with Hardware</strong></p>
+<p>Replace the <code class="docutils literal notranslate"><span class="pre">generate_mock_data()</span></code> function with your actual data source:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">get_real_data</span><span class="p">():</span>
+    <span class="c1"># Connect to your measurement hardware</span>
+    <span class="n">snr</span> <span class="o">=</span> <span class="n">hardware</span><span class="o">.</span><span class="n">get_snr</span><span class="p">()</span>
+    <span class="n">parity</span> <span class="o">=</span> <span class="n">hardware</span><span class="o">.</span><span class="n">get_parity_ratio</span><span class="p">()</span>
+    <span class="c1"># ... other parameters</span>
+    <span class="k">return</span> <span class="n">data_dict</span>
+</pre></div>
+</div>
+<p><strong>Custom Layouts</strong></p>
+<p>The dashboard layout can be customized by modifying the <code class="docutils literal notranslate"><span class="pre">app.layout</span></code> section:</p>
+<ul class="simple">
+<li><p>Add new plots or controls</p></li>
+<li><p>Adjust subplot arrangements</p></li>
+<li><p>Modify styling and themes</p></li>
+<li><p>Include additional data sources</p></li>
+</ul>
+</section>
+<section id="dashboard-components">
+<h2>Dashboard Components<a class="headerlink" href="#dashboard-components" title="Link to this heading"></a></h2>
+<p><strong>Control Panel</strong>
+- Update interval slider (0.5-10 seconds)
+- Time window selector (1-60 minutes)
+- System reset and export buttons</p>
+<p><strong>Main Plots</strong>
+- SNR time series with trend analysis
+- Parity ratio with expected value overlay
+- Witness channel dual-axis plots
+- Frequency domain lock-in detection</p>
+<p><strong>Status Panel</strong>
+- Real-time system health indicator
+- Current parameter values
+- Last update timestamp
+- Alert notifications</p>
+<p><strong>Data Export</strong>
+- CSV export of time series data
+- PNG export of current plots
+- PDF report generation
+- Raw data download</p>
+</section>
+<section id="customization">
+<h2>Customization<a class="headerlink" href="#customization" title="Link to this heading"></a></h2>
+<p><strong>Adding New Parameters</strong></p>
+<ol class="arabic simple">
+<li><p>Extend the <code class="docutils literal notranslate"><span class="pre">data_buffer</span></code> dictionary</p></li>
+<li><p>Update <code class="docutils literal notranslate"><span class="pre">generate_mock_data()</span></code> or data source</p></li>
+<li><p>Add new plot in <code class="docutils literal notranslate"><span class="pre">update_plots()</span></code> callback</p></li>
+<li><p>Include in layout with appropriate styling</p></li>
+</ol>
+<p><strong>Styling and Themes</strong></p>
+<p>The dashboard uses Plotly’s theming system:</p>
+<ul class="simple">
+<li><p>Modify <code class="docutils literal notranslate"><span class="pre">template='plotly_white'</span></code> for different themes</p></li>
+<li><p>Customize colors in the <code class="docutils literal notranslate"><span class="pre">line=dict(color='#e74c3c')</span></code> parameters</p></li>
+<li><p>Adjust layout spacing and fonts in <code class="docutils literal notranslate"><span class="pre">update_layout()</span></code></p></li>
+</ul>
+<p><strong>Performance Optimization</strong></p>
+<p>For high-frequency data:</p>
+<ul class="simple">
+<li><p>Increase <code class="docutils literal notranslate"><span class="pre">maxlen</span></code> in data buffers</p></li>
+<li><p>Implement data decimation for display</p></li>
+<li><p>Use WebSocket streaming for efficiency</p></li>
+<li><p>Consider database backend for persistence</p></li>
+</ul>
+</section>
+<section id="deployment">
+<h2>Deployment<a class="headerlink" href="#deployment" title="Link to this heading"></a></h2>
+<p><strong>Production Deployment</strong>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Using Gunicorn</span>
+<span class="n">pip</span> <span class="n">install</span> <span class="n">gunicorn</span>
+<span class="n">gunicorn</span> <span class="n">dashboard</span><span class="p">:</span><span class="n">server</span> <span class="o">-</span><span class="n">b</span> <span class="mf">0.0.0.0</span><span class="p">:</span><span class="mi">8050</span>
+</pre></div>
+</div>
+<p><strong>Docker Deployment</strong>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">docker</span> <span class="n">run</span> <span class="o">-</span><span class="n">p</span> <span class="mi">8050</span><span class="p">:</span><span class="mi">8050</span> <span class="o">-</span><span class="n">v</span> <span class="o">/</span><span class="n">data</span><span class="p">:</span><span class="o">/</span><span class="n">app</span><span class="o">/</span><span class="n">data</span> <span class="n">ccc</span><span class="o">-</span><span class="n">clock</span>
+</pre></div>
+</div>
+<p><strong>Reverse Proxy Setup</strong></p>
+<p>For HTTPS and domain routing, configure nginx:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>location /dashboard/ {
+    proxy_pass http://localhost:8050/;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+}
+</pre></div>
+</div>
+</section>
+<section id="troubleshooting">
+<h2>Troubleshooting<a class="headerlink" href="#troubleshooting" title="Link to this heading"></a></h2>
+<p><strong>Dashboard Won’t Start</strong>
+- Check port availability: <code class="docutils literal notranslate"><span class="pre">netstat</span> <span class="pre">-an</span> <span class="pre">|</span> <span class="pre">grep</span> <span class="pre">8050</span></code>
+- Verify dependencies: <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">plotly</span> <span class="pre">dash</span> <span class="pre">websockets</span></code>
+- Check firewall settings</p>
+<p><strong>No Data Displayed</strong>
+- Verify data source connection
+- Check <code class="docutils literal notranslate"><span class="pre">generate_mock_data()</span></code> function
+- Review browser console for JavaScript errors</p>
+<p><strong>Performance Issues</strong>
+- Reduce update frequency
+- Decrease time window
+- Check system resources
+- Consider data decimation</p>
+<p><strong>WebSocket Connection Failures</strong>
+- Verify WebSocket support in browser
+- Check network connectivity
+- Review server logs for errors
+- Test with different browsers</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="api.html" class="btn btn-neutral float-left" title="API Reference" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="animation.html" class="btn btn-neutral float-right" title="Animation System Documentation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, CCC Clock Development Team.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

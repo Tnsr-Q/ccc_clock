@@ -1,0 +1,794 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>protocol &mdash; CCC Clock Demonstration System 1.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=8d563738"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            CCC Clock Demonstration System
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Quick Start Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dashboard.html">Live Dashboard Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../animation.html">Animation System Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../validation.html">Validation and Testing</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">CCC Clock Demonstration System</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Module code</a></li>
+      <li class="breadcrumb-item active">protocol</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for protocol</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">CCC Protocol Design Module</span>
+
+<span class="sd">Implements the protocol design for Θ-only non-commuting loops in CCC clock</span>
+<span class="sd">experiments, including ABBA sequencing, loop reversal, witness channels,</span>
+<span class="sd">and systematic error analysis.</span>
+
+<span class="sd">Key components:</span>
+<span class="sd">- Θ-only loop specification in (ln r*, θ) operational space</span>
+<span class="sd">- ABBA sequencing with timing diagrams</span>
+<span class="sd">- Loop reversal mechanics and ensemble swap protocols</span>
+<span class="sd">- Witness channel modeling and orthogonality tests</span>
+<span class="sd">- Complexity/dissipation engineering specifications</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">warnings</span>
+<span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">dataclass</span>
+<span class="kn">from</span> <span class="nn">enum</span> <span class="kn">import</span> <span class="n">Enum</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+
+<div class="viewcode-block" id="LoopDirection">
+<a class="viewcode-back" href="../api.html#protocol.LoopDirection">[docs]</a>
+<span class="k">class</span> <span class="nc">LoopDirection</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Enumeration for loop direction.&quot;&quot;&quot;</span>
+
+    <span class="n">NORMAL</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">REVERSED</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span></div>
+
+
+
+<div class="viewcode-block" id="SequencePhase">
+<a class="viewcode-back" href="../api.html#protocol.SequencePhase">[docs]</a>
+<span class="k">class</span> <span class="nc">SequencePhase</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;ABBA sequence phases.&quot;&quot;&quot;</span>
+
+    <span class="n">A_FIRST</span> <span class="o">=</span> <span class="s2">&quot;A1&quot;</span>
+    <span class="n">B_FIRST</span> <span class="o">=</span> <span class="s2">&quot;B1&quot;</span>
+    <span class="n">B_SECOND</span> <span class="o">=</span> <span class="s2">&quot;B2&quot;</span>
+    <span class="n">A_SECOND</span> <span class="o">=</span> <span class="s2">&quot;A2&quot;</span></div>
+
+
+
+<div class="viewcode-block" id="ThetaLoop">
+<a class="viewcode-back" href="../api.html#protocol.ThetaLoop">[docs]</a>
+<span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">ThetaLoop</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Specification for Θ-only non-commuting loop in (ln r*, θ) space.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">r_star_min</span><span class="p">:</span> <span class="nb">float</span>  <span class="c1"># Minimum ruler value</span>
+    <span class="n">r_star_max</span><span class="p">:</span> <span class="nb">float</span>  <span class="c1"># Maximum ruler value</span>
+    <span class="n">theta_min</span><span class="p">:</span> <span class="nb">float</span>  <span class="c1"># Minimum protractor angle (radians)</span>
+    <span class="n">theta_max</span><span class="p">:</span> <span class="nb">float</span>  <span class="c1"># Maximum protractor angle (radians)</span>
+    <span class="n">direction</span><span class="p">:</span> <span class="n">LoopDirection</span> <span class="o">=</span> <span class="n">LoopDirection</span><span class="o">.</span><span class="n">NORMAL</span>
+
+    <span class="k">def</span> <span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Validate loop parameters.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">r_star_max</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">r_star_min</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;r_star_max must be greater than r_star_min&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">theta_max</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">theta_min</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;theta_max must be greater than theta_min&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">theta_max</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">theta_min</span> <span class="o">&gt;</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Theta range exceeds 2π, may cause ambiguity&quot;</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">area</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute loop area A_Σ in (ln r*, θ) space.&quot;&quot;&quot;</span>
+        <span class="n">ln_r_range</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">r_star_max</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">r_star_min</span><span class="p">)</span>
+        <span class="n">theta_range</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">theta_max</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">theta_min</span>
+        <span class="k">return</span> <span class="n">ln_r_range</span> <span class="o">*</span> <span class="n">theta_range</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">center_ln_r</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Center point in ln r* coordinate.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">r_star_max</span><span class="p">)</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">r_star_min</span><span class="p">))</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">center_theta</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Center point in θ coordinate.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">theta_max</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">theta_min</span><span class="p">)</span>
+
+<div class="viewcode-block" id="ThetaLoop.reverse">
+<a class="viewcode-back" href="../api.html#protocol.ThetaLoop.reverse">[docs]</a>
+    <span class="k">def</span> <span class="nf">reverse</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;ThetaLoop&quot;</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create reversed loop for sign flip test.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">ThetaLoop</span><span class="p">(</span>
+            <span class="n">r_star_min</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">r_star_min</span><span class="p">,</span>
+            <span class="n">r_star_max</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">r_star_max</span><span class="p">,</span>
+            <span class="n">theta_min</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">theta_min</span><span class="p">,</span>
+            <span class="n">theta_max</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">theta_max</span><span class="p">,</span>
+            <span class="n">direction</span><span class="o">=</span><span class="p">(</span>
+                <span class="n">LoopDirection</span><span class="o">.</span><span class="n">REVERSED</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">direction</span> <span class="o">==</span> <span class="n">LoopDirection</span><span class="o">.</span><span class="n">NORMAL</span>
+                <span class="k">else</span> <span class="n">LoopDirection</span><span class="o">.</span><span class="n">NORMAL</span>
+            <span class="p">),</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ThetaLoop.generate_path_points">
+<a class="viewcode-back" href="../api.html#protocol.ThetaLoop.generate_path_points">[docs]</a>
+    <span class="k">def</span> <span class="nf">generate_path_points</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">n_points</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">100</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generate discrete points along the loop path.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            n_points: Number of points to generate</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Tuple of (ln_r_points, theta_points)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Simple rectangular loop in (ln r*, θ) space</span>
+        <span class="n">ln_r_min</span><span class="p">,</span> <span class="n">ln_r_max</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">r_star_min</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">r_star_max</span><span class="p">)</span>
+
+        <span class="c1"># Four sides of rectangle</span>
+        <span class="n">n_side</span> <span class="o">=</span> <span class="n">n_points</span> <span class="o">//</span> <span class="mi">4</span>
+
+        <span class="c1"># Side 1: bottom (constant ln_r_min, theta varies)</span>
+        <span class="n">theta1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">theta_min</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">theta_max</span><span class="p">,</span> <span class="n">n_side</span><span class="p">)</span>
+        <span class="n">ln_r1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full_like</span><span class="p">(</span><span class="n">theta1</span><span class="p">,</span> <span class="n">ln_r_min</span><span class="p">)</span>
+
+        <span class="c1"># Side 2: right (constant theta_max, ln_r varies)</span>
+        <span class="n">ln_r2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">ln_r_min</span><span class="p">,</span> <span class="n">ln_r_max</span><span class="p">,</span> <span class="n">n_side</span><span class="p">)</span>
+        <span class="n">theta2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full_like</span><span class="p">(</span><span class="n">ln_r2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">theta_max</span><span class="p">)</span>
+
+        <span class="c1"># Side 3: top (constant ln_r_max, theta varies backwards)</span>
+        <span class="n">theta3</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">theta_max</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">theta_min</span><span class="p">,</span> <span class="n">n_side</span><span class="p">)</span>
+        <span class="n">ln_r3</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full_like</span><span class="p">(</span><span class="n">theta3</span><span class="p">,</span> <span class="n">ln_r_max</span><span class="p">)</span>
+
+        <span class="c1"># Side 4: left (constant theta_min, ln_r varies backwards)</span>
+        <span class="n">ln_r4</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">ln_r_max</span><span class="p">,</span> <span class="n">ln_r_min</span><span class="p">,</span> <span class="n">n_points</span> <span class="o">-</span> <span class="mi">3</span> <span class="o">*</span> <span class="n">n_side</span><span class="p">)</span>
+        <span class="n">theta4</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full_like</span><span class="p">(</span><span class="n">ln_r4</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">theta_min</span><span class="p">)</span>
+
+        <span class="c1"># Combine all sides</span>
+        <span class="n">ln_r_points</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">ln_r1</span><span class="p">,</span> <span class="n">ln_r2</span><span class="p">,</span> <span class="n">ln_r3</span><span class="p">,</span> <span class="n">ln_r4</span><span class="p">])</span>
+        <span class="n">theta_points</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">theta1</span><span class="p">,</span> <span class="n">theta2</span><span class="p">,</span> <span class="n">theta3</span><span class="p">,</span> <span class="n">theta4</span><span class="p">])</span>
+
+        <span class="c1"># Apply direction</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">direction</span> <span class="o">==</span> <span class="n">LoopDirection</span><span class="o">.</span><span class="n">REVERSED</span><span class="p">:</span>
+            <span class="n">ln_r_points</span> <span class="o">=</span> <span class="n">ln_r_points</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">theta_points</span> <span class="o">=</span> <span class="n">theta_points</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">ln_r_points</span><span class="p">,</span> <span class="n">theta_points</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="ABBASequence">
+<a class="viewcode-back" href="../api.html#protocol.ABBASequence">[docs]</a>
+<span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">ABBASequence</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    ABBA sequencing specification with timing diagrams.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">phase_duration</span><span class="p">:</span> <span class="nb">float</span>  <span class="c1"># Duration of each phase (s)</span>
+    <span class="n">modulation_frequency</span><span class="p">:</span> <span class="nb">float</span>  <span class="c1"># Modulation frequency (Hz)</span>
+    <span class="n">total_cycles</span><span class="p">:</span> <span class="nb">int</span>  <span class="c1"># Number of complete ABBA cycles</span>
+
+    <span class="k">def</span> <span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Validate sequence parameters.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">phase_duration</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Phase duration must be positive&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">modulation_frequency</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Modulation frequency must be positive&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">total_cycles</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Total cycles must be positive&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Check Nyquist criterion</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">modulation_frequency</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">phase_duration</span><span class="p">):</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Modulation frequency may violate Nyquist criterion&quot;</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">cycle_duration</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Duration of one complete ABBA cycle.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="mi">4</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">phase_duration</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">total_duration</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Total sequence duration.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">total_cycles</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">cycle_duration</span>
+
+<div class="viewcode-block" id="ABBASequence.generate_timing_sequence">
+<a class="viewcode-back" href="../api.html#protocol.ABBASequence.generate_timing_sequence">[docs]</a>
+    <span class="k">def</span> <span class="nf">generate_timing_sequence</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generate timing sequence for ABBA protocol.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Tuple of (time_array, modulation_array, phase_labels)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">dt</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="mi">10</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">modulation_frequency</span><span class="p">)</span>  <span class="c1"># 10x oversampling</span>
+        <span class="n">t_total</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">total_duration</span>
+        <span class="n">time_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">t_total</span><span class="p">,</span> <span class="n">dt</span><span class="p">)</span>
+
+        <span class="n">modulation_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">time_array</span><span class="p">)</span>
+        <span class="n">phase_labels</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">cycle</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">total_cycles</span><span class="p">):</span>
+            <span class="n">cycle_start</span> <span class="o">=</span> <span class="n">cycle</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">cycle_duration</span>
+
+            <span class="k">for</span> <span class="n">phase_idx</span><span class="p">,</span> <span class="p">(</span><span class="n">phase</span><span class="p">,</span> <span class="n">sign</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span>
+                <span class="p">[</span>
+                    <span class="p">(</span><span class="n">SequencePhase</span><span class="o">.</span><span class="n">A_FIRST</span><span class="p">,</span> <span class="o">+</span><span class="mi">1</span><span class="p">),</span>
+                    <span class="p">(</span><span class="n">SequencePhase</span><span class="o">.</span><span class="n">B_FIRST</span><span class="p">,</span> <span class="o">+</span><span class="mi">1</span><span class="p">),</span>
+                    <span class="p">(</span><span class="n">SequencePhase</span><span class="o">.</span><span class="n">B_SECOND</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span>
+                    <span class="p">(</span><span class="n">SequencePhase</span><span class="o">.</span><span class="n">A_SECOND</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span>
+                <span class="p">]</span>
+            <span class="p">):</span>
+                <span class="n">phase_start</span> <span class="o">=</span> <span class="n">cycle_start</span> <span class="o">+</span> <span class="n">phase_idx</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">phase_duration</span>
+                <span class="n">phase_end</span> <span class="o">=</span> <span class="n">phase_start</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">phase_duration</span>
+
+                <span class="c1"># Find time indices for this phase</span>
+                <span class="n">phase_mask</span> <span class="o">=</span> <span class="p">(</span><span class="n">time_array</span> <span class="o">&gt;=</span> <span class="n">phase_start</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">time_array</span> <span class="o">&lt;</span> <span class="n">phase_end</span><span class="p">)</span>
+                <span class="n">modulation_array</span><span class="p">[</span><span class="n">phase_mask</span><span class="p">]</span> <span class="o">=</span> <span class="n">sign</span>
+
+                <span class="k">if</span> <span class="n">cycle</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>  <span class="c1"># Only store labels for first cycle</span>
+                    <span class="n">phase_labels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">phase</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">time_array</span><span class="p">,</span> <span class="n">modulation_array</span><span class="p">,</span> <span class="n">phase_labels</span></div>
+
+
+<div class="viewcode-block" id="ABBASequence.compute_demodulation_efficiency">
+<a class="viewcode-back" href="../api.html#protocol.ABBASequence.compute_demodulation_efficiency">[docs]</a>
+    <span class="k">def</span> <span class="nf">compute_demodulation_efficiency</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute theoretical demodulation efficiency.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Efficiency factor (0 to 1)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># For perfect ABBA sequence, efficiency is 1</span>
+        <span class="c1"># In practice, finite switching time reduces efficiency</span>
+        <span class="n">switching_time</span> <span class="o">=</span> <span class="mf">0.01</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">phase_duration</span>  <span class="c1"># Assume 1% switching time</span>
+        <span class="n">active_time</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">phase_duration</span> <span class="o">-</span> <span class="n">switching_time</span>
+        <span class="k">return</span> <span class="n">active_time</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">phase_duration</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="WitnessChannel">
+<a class="viewcode-back" href="../api.html#protocol.WitnessChannel">[docs]</a>
+<span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">WitnessChannel</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Witness channel for systematic error monitoring.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">parameter</span><span class="p">:</span> <span class="nb">str</span>  <span class="c1"># Physical parameter being monitored</span>
+    <span class="n">sensitivity</span><span class="p">:</span> <span class="nb">float</span>  <span class="c1"># Sensitivity coefficient</span>
+    <span class="n">noise_level</span><span class="p">:</span> <span class="nb">float</span>  <span class="c1"># Noise level</span>
+    <span class="n">correlation_with_ccc</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span>  <span class="c1"># Correlation with CCC signal</span>
+
+<div class="viewcode-block" id="WitnessChannel.generate_trace">
+<a class="viewcode-back" href="../api.html#protocol.WitnessChannel.generate_trace">[docs]</a>
+    <span class="k">def</span> <span class="nf">generate_trace</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">time_array</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">systematic_amplitude</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-19</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generate witness channel trace.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            time_array: Time points</span>
+<span class="sd">            systematic_amplitude: Amplitude of systematic variations</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Witness channel signal</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Generate systematic variations</span>
+        <span class="n">systematic</span> <span class="o">=</span> <span class="n">systematic_amplitude</span> <span class="o">*</span> <span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="mf">0.1</span> <span class="o">*</span> <span class="n">time_array</span><span class="p">)</span>  <span class="c1"># Slow drift</span>
+            <span class="o">+</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">time_array</span><span class="p">)</span>  <span class="c1"># Medium frequency</span>
+            <span class="o">+</span> <span class="mf">0.2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="mf">2.0</span> <span class="o">*</span> <span class="n">time_array</span><span class="p">)</span>  <span class="c1"># Faster variation</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Add noise</span>
+        <span class="n">noise</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">noise_level</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">time_array</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">sensitivity</span> <span class="o">*</span> <span class="n">systematic</span> <span class="o">+</span> <span class="n">noise</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="OrthogonalityTest">
+<a class="viewcode-back" href="../api.html#protocol.OrthogonalityTest">[docs]</a>
+<span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">OrthogonalityTest</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Specification for orthogonality tests to validate CCC signal.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">description</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">expected_ccc_response</span><span class="p">:</span> <span class="nb">str</span>  <span class="c1"># &quot;flip&quot;, &quot;null&quot;, &quot;unchanged&quot;</span>
+    <span class="n">test_function</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set default test functions.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">test_function</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s2">&quot;loop_reversal&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">test_function</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_loop_reversal_test</span>
+            <span class="k">elif</span> <span class="s2">&quot;commuting&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">test_function</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_commuting_loop_test</span>
+            <span class="k">elif</span> <span class="s2">&quot;entanglement&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">test_function</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_entanglement_test</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">test_function</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_default_test</span>
+
+    <span class="k">def</span> <span class="nf">_loop_reversal_test</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">signal_normal</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">signal_test</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test for loop reversal sign flip.&quot;&quot;&quot;</span>
+        <span class="n">ratio</span> <span class="o">=</span> <span class="n">signal_test</span> <span class="o">/</span> <span class="n">signal_normal</span> <span class="k">if</span> <span class="n">signal_normal</span> <span class="o">!=</span> <span class="mi">0</span> <span class="k">else</span> <span class="mi">0</span>
+        <span class="n">sign_flip</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">signal_normal</span><span class="p">)</span> <span class="o">!=</span> <span class="n">np</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">signal_test</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;passed&quot;</span><span class="p">:</span> <span class="n">sign_flip</span> <span class="ow">and</span> <span class="nb">abs</span><span class="p">(</span><span class="n">ratio</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">0.2</span><span class="p">,</span>  <span class="c1"># Should be ~-1</span>
+            <span class="s2">&quot;ratio&quot;</span><span class="p">:</span> <span class="n">ratio</span><span class="p">,</span>
+            <span class="s2">&quot;sign_flip_detected&quot;</span><span class="p">:</span> <span class="n">sign_flip</span><span class="p">,</span>
+            <span class="s2">&quot;note&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;Expected ratio ≈ -1, got </span><span class="si">{</span><span class="n">ratio</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">_commuting_loop_test</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">signal_normal</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">signal_test</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test for commuting loop nullification.&quot;&quot;&quot;</span>
+        <span class="n">suppression</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">signal_test</span><span class="p">)</span> <span class="o">/</span> <span class="nb">abs</span><span class="p">(</span><span class="n">signal_normal</span><span class="p">)</span> <span class="k">if</span> <span class="n">signal_normal</span> <span class="o">!=</span> <span class="mi">0</span> <span class="k">else</span> <span class="mi">1</span>
+
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;passed&quot;</span><span class="p">:</span> <span class="n">suppression</span> <span class="o">&lt;</span> <span class="mf">0.15</span><span class="p">,</span>  <span class="c1"># Should be strongly suppressed</span>
+            <span class="s2">&quot;suppression_factor&quot;</span><span class="p">:</span> <span class="n">suppression</span><span class="p">,</span>
+            <span class="s2">&quot;note&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;Expected strong suppression, got </span><span class="si">{</span><span class="n">suppression</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">_entanglement_test</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">signal_normal</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">signal_test</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test for entanglement visibility dependence.&quot;&quot;&quot;</span>
+        <span class="n">enhancement</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">signal_test</span><span class="p">)</span> <span class="o">/</span> <span class="nb">abs</span><span class="p">(</span><span class="n">signal_normal</span><span class="p">)</span> <span class="k">if</span> <span class="n">signal_normal</span> <span class="o">!=</span> <span class="mi">0</span> <span class="k">else</span> <span class="mi">1</span>
+
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;passed&quot;</span><span class="p">:</span> <span class="n">enhancement</span> <span class="o">&gt;</span> <span class="mf">1.2</span><span class="p">,</span>  <span class="c1"># Should be enhanced</span>
+            <span class="s2">&quot;enhancement_factor&quot;</span><span class="p">:</span> <span class="n">enhancement</span><span class="p">,</span>
+            <span class="s2">&quot;note&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;Expected enhancement, got </span><span class="si">{</span><span class="n">enhancement</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">_default_test</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">signal_normal</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">signal_test</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Default test - just compare magnitudes.&quot;&quot;&quot;</span>
+        <span class="n">ratio</span> <span class="o">=</span> <span class="n">signal_test</span> <span class="o">/</span> <span class="n">signal_normal</span> <span class="k">if</span> <span class="n">signal_normal</span> <span class="o">!=</span> <span class="mi">0</span> <span class="k">else</span> <span class="mi">0</span>
+
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;passed&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>  <span class="c1"># Always pass for default</span>
+            <span class="s2">&quot;ratio&quot;</span><span class="p">:</span> <span class="n">ratio</span><span class="p">,</span>
+            <span class="s2">&quot;note&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;Default test, ratio = </span><span class="si">{</span><span class="n">ratio</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="p">}</span></div>
+
+
+
+<div class="viewcode-block" id="CCCProtocol">
+<a class="viewcode-back" href="../api.html#protocol.CCCProtocol">[docs]</a>
+<span class="k">class</span> <span class="nc">CCCProtocol</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Complete CCC protocol specification and execution.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="CCCProtocol.__init__">
+<a class="viewcode-back" href="../api.html#protocol.CCCProtocol.__init__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">theta_loop</span><span class="p">:</span> <span class="n">ThetaLoop</span><span class="p">,</span> <span class="n">abba_sequence</span><span class="p">:</span> <span class="n">ABBASequence</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize CCC protocol.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            theta_loop: Θ-only loop specification</span>
+<span class="sd">            abba_sequence: ABBA sequencing parameters</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">theta_loop</span> <span class="o">=</span> <span class="n">theta_loop</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">abba_sequence</span> <span class="o">=</span> <span class="n">abba_sequence</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">witness_channels</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">orthogonality_tests</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="c1"># Initialize standard witness channels</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_setup_standard_witnesses</span><span class="p">()</span>
+
+        <span class="c1"># Initialize standard orthogonality tests</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_setup_standard_tests</span><span class="p">()</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_setup_standard_witnesses</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Setup standard witness channels.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">witness_channels</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">WitnessChannel</span><span class="p">(</span><span class="s2">&quot;LO_amplitude&quot;</span><span class="p">,</span> <span class="s2">&quot;Local oscillator amplitude&quot;</span><span class="p">,</span> <span class="mf">1e-15</span><span class="p">,</span> <span class="mf">1e-18</span><span class="p">),</span>
+            <span class="n">WitnessChannel</span><span class="p">(</span><span class="s2">&quot;polarization&quot;</span><span class="p">,</span> <span class="s2">&quot;Polarization leakage&quot;</span><span class="p">,</span> <span class="mf">5e-16</span><span class="p">,</span> <span class="mf">5e-19</span><span class="p">),</span>
+            <span class="n">WitnessChannel</span><span class="p">(</span><span class="s2">&quot;B_field&quot;</span><span class="p">,</span> <span class="s2">&quot;Magnetic field&quot;</span><span class="p">,</span> <span class="mf">2e-15</span><span class="p">,</span> <span class="mf">2e-18</span><span class="p">),</span>
+            <span class="n">WitnessChannel</span><span class="p">(</span><span class="s2">&quot;temperature&quot;</span><span class="p">,</span> <span class="s2">&quot;Temperature fluctuations&quot;</span><span class="p">,</span> <span class="mf">1e-14</span><span class="p">,</span> <span class="mf">1e-17</span><span class="p">),</span>
+        <span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">_setup_standard_tests</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Setup standard orthogonality tests.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">orthogonality_tests</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">OrthogonalityTest</span><span class="p">(</span>
+                <span class="s2">&quot;loop_reversal&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;Loop reversal should flip CCC signal sign&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;flip&quot;</span><span class="p">,</span>
+            <span class="p">),</span>
+            <span class="n">OrthogonalityTest</span><span class="p">(</span>
+                <span class="s2">&quot;commuting_loop&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;Rulers-only or protractors-only loops should null CCC signal&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;null&quot;</span><span class="p">,</span>
+            <span class="p">),</span>
+            <span class="n">OrthogonalityTest</span><span class="p">(</span>
+                <span class="s2">&quot;entanglement_visibility&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;Higher entanglement visibility should enhance CCC signal&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;enhanced&quot;</span><span class="p">,</span>
+            <span class="p">),</span>
+        <span class="p">]</span>
+
+<div class="viewcode-block" id="CCCProtocol.generate_protocol_timing">
+<a class="viewcode-back" href="../api.html#protocol.CCCProtocol.generate_protocol_timing">[docs]</a>
+    <span class="k">def</span> <span class="nf">generate_protocol_timing</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generate complete protocol timing including all phases.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Dictionary with timing information</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># ABBA sequence timing</span>
+        <span class="n">time_array</span><span class="p">,</span> <span class="n">modulation</span><span class="p">,</span> <span class="n">phase_labels</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">abba_sequence</span><span class="o">.</span><span class="n">generate_timing_sequence</span><span class="p">()</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Witness channel traces</span>
+        <span class="n">witness_traces</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">witness</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">witness_channels</span><span class="p">:</span>
+            <span class="n">witness_traces</span><span class="p">[</span><span class="n">witness</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">witness</span><span class="o">.</span><span class="n">generate_trace</span><span class="p">(</span><span class="n">time_array</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;time_array&quot;</span><span class="p">:</span> <span class="n">time_array</span><span class="p">,</span>
+            <span class="s2">&quot;modulation_sequence&quot;</span><span class="p">:</span> <span class="n">modulation</span><span class="p">,</span>
+            <span class="s2">&quot;phase_labels&quot;</span><span class="p">:</span> <span class="n">phase_labels</span><span class="p">,</span>
+            <span class="s2">&quot;witness_traces&quot;</span><span class="p">:</span> <span class="n">witness_traces</span><span class="p">,</span>
+            <span class="s2">&quot;loop_area&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">theta_loop</span><span class="o">.</span><span class="n">area</span><span class="p">,</span>
+            <span class="s2">&quot;total_duration&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">abba_sequence</span><span class="o">.</span><span class="n">total_duration</span><span class="p">,</span>
+            <span class="s2">&quot;demod_efficiency&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">abba_sequence</span><span class="o">.</span><span class="n">compute_demodulation_efficiency</span><span class="p">(),</span>
+        <span class="p">}</span></div>
+
+
+<div class="viewcode-block" id="CCCProtocol.execute_orthogonality_tests">
+<a class="viewcode-back" href="../api.html#protocol.CCCProtocol.execute_orthogonality_tests">[docs]</a>
+    <span class="k">def</span> <span class="nf">execute_orthogonality_tests</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ccc_signal_normal</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Execute all orthogonality tests.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            ccc_signal_normal: Normal CCC signal amplitude</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Dictionary with test results</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">test_results</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="k">for</span> <span class="n">test</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">orthogonality_tests</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">test</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s2">&quot;loop_reversal&quot;</span><span class="p">:</span>
+                <span class="c1"># Simulate reversed loop signal (should flip sign)</span>
+                <span class="n">signal_test</span> <span class="o">=</span> <span class="o">-</span><span class="n">ccc_signal_normal</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="mf">0.1</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">())</span>
+            <span class="k">elif</span> <span class="n">test</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s2">&quot;commuting_loop&quot;</span><span class="p">:</span>
+                <span class="c1"># Simulate commuting loop (should be suppressed)</span>
+                <span class="n">signal_test</span> <span class="o">=</span> <span class="n">ccc_signal_normal</span> <span class="o">*</span> <span class="mf">0.05</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">())</span>
+            <span class="k">elif</span> <span class="n">test</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s2">&quot;entanglement_visibility&quot;</span><span class="p">:</span>
+                <span class="c1"># Simulate enhanced entanglement (should be enhanced)</span>
+                <span class="n">signal_test</span> <span class="o">=</span> <span class="n">ccc_signal_normal</span> <span class="o">*</span> <span class="mf">2.0</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="mf">0.2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">())</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">signal_test</span> <span class="o">=</span> <span class="n">ccc_signal_normal</span>
+
+            <span class="n">result</span> <span class="o">=</span> <span class="n">test</span><span class="o">.</span><span class="n">test_function</span><span class="p">(</span><span class="n">ccc_signal_normal</span><span class="p">,</span> <span class="n">signal_test</span><span class="p">)</span>
+            <span class="n">test_results</span><span class="p">[</span><span class="n">test</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s2">&quot;test&quot;</span><span class="p">:</span> <span class="n">test</span><span class="p">,</span>
+                <span class="s2">&quot;result&quot;</span><span class="p">:</span> <span class="n">result</span><span class="p">,</span>
+                <span class="s2">&quot;passed&quot;</span><span class="p">:</span> <span class="n">result</span><span class="p">[</span><span class="s2">&quot;passed&quot;</span><span class="p">],</span>
+            <span class="p">}</span>
+
+        <span class="k">return</span> <span class="n">test_results</span></div>
+
+
+<div class="viewcode-block" id="CCCProtocol.complexity_dissipation_analysis">
+<a class="viewcode-back" href="../api.html#protocol.CCCProtocol.complexity_dissipation_analysis">[docs]</a>
+    <span class="k">def</span> <span class="nf">complexity_dissipation_analysis</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Analyze complexity and dissipation requirements.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Dictionary with complexity/dissipation analysis</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Estimate complexity requirements</span>
+        <span class="n">loop_area</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">theta_loop</span><span class="o">.</span><span class="n">area</span>
+        <span class="n">sequence_duration</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">abba_sequence</span><span class="o">.</span><span class="n">total_duration</span>
+
+        <span class="c1"># Complexity source requirements (from mission brief)</span>
+        <span class="n">n_qubits_min</span> <span class="o">=</span> <span class="mi">100</span>
+        <span class="n">n_qubits_max</span> <span class="o">=</span> <span class="mi">300</span>
+        <span class="n">operation_rate</span> <span class="o">=</span> <span class="mf">1e6</span>  <span class="c1"># MHz range</span>
+
+        <span class="c1"># Dissipation analysis</span>
+        <span class="n">local_dissipation_limit</span> <span class="o">=</span> <span class="mf">1e-12</span>  <span class="c1"># 1 pW near atoms</span>
+        <span class="n">remote_dissipation_budget</span> <span class="o">=</span> <span class="mf">1e-3</span>  <span class="c1"># 1 mW remote</span>
+
+        <span class="c1"># Thermal analysis</span>
+        <span class="n">thermal_noise_limit</span> <span class="o">=</span> <span class="mf">1e-18</span>  <span class="c1"># Fractional frequency</span>
+
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;complexity_requirements&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;n_qubits_range&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">n_qubits_min</span><span class="p">,</span> <span class="n">n_qubits_max</span><span class="p">),</span>
+                <span class="s2">&quot;operation_rate_hz&quot;</span><span class="p">:</span> <span class="n">operation_rate</span><span class="p">,</span>
+                <span class="s2">&quot;sequence_complexity&quot;</span><span class="p">:</span> <span class="n">loop_area</span> <span class="o">*</span> <span class="n">sequence_duration</span><span class="p">,</span>
+                <span class="s2">&quot;semantic_neutrality&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>  <span class="c1"># Unitary sequences</span>
+            <span class="p">},</span>
+            <span class="s2">&quot;dissipation_budget&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;local_limit_w&quot;</span><span class="p">:</span> <span class="n">local_dissipation_limit</span><span class="p">,</span>
+                <span class="s2">&quot;remote_budget_w&quot;</span><span class="p">:</span> <span class="n">remote_dissipation_budget</span><span class="p">,</span>
+                <span class="s2">&quot;thermal_noise_limit&quot;</span><span class="p">:</span> <span class="n">thermal_noise_limit</span><span class="p">,</span>
+                <span class="s2">&quot;heat_routing_required&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+            <span class="p">},</span>
+            <span class="s2">&quot;engineering_constraints&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;loop_area_feasible&quot;</span><span class="p">:</span> <span class="n">loop_area</span> <span class="o">&lt;</span> <span class="mf">1e-3</span><span class="p">,</span>  <span class="c1"># Practical limit</span>
+                <span class="s2">&quot;timing_precision_required&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">abba_sequence</span><span class="o">.</span><span class="n">phase_duration</span> <span class="o">/</span> <span class="mi">1000</span><span class="p">,</span>
+                <span class="s2">&quot;stability_requirements&quot;</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="s2">&quot;frequency&quot;</span><span class="p">:</span> <span class="mf">1e-18</span><span class="p">,</span>
+                    <span class="s2">&quot;amplitude&quot;</span><span class="p">:</span> <span class="mf">1e-15</span><span class="p">,</span>
+                    <span class="s2">&quot;phase&quot;</span><span class="p">:</span> <span class="mf">1e-3</span><span class="p">,</span>  <span class="c1"># radians</span>
+                <span class="p">},</span>
+            <span class="p">},</span>
+        <span class="p">}</span></div>
+
+
+<div class="viewcode-block" id="CCCProtocol.generate_day_one_checklist">
+<a class="viewcode-back" href="../api.html#protocol.CCCProtocol.generate_day_one_checklist">[docs]</a>
+    <span class="k">def</span> <span class="nf">generate_day_one_checklist</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generate day-one lab checklist.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            List of checklist items</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">checklist</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="s2">&quot;✓ Dual Sr lattice clocks operational and co-located&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;✓ Clock instability σ₀ ≤ 3×10⁻¹⁸/√τ verified&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;✓ Complexity source (100-300 qubits) installed and tested&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;✓ Local dissipation ≤ 1 pW near atoms confirmed&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;✓ ABBA modulation system calibrated at f_m = 0.3-0.8 Hz&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;✓ Θ-only loop area A_Σ = </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">theta_loop</span><span class="o">.</span><span class="n">area</span><span class="si">:</span><span class="s2">.2e</span><span class="si">}</span><span class="s2"> configured&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;✓ Witness channels (LO, polarization, B-field, temperature) active&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;✓ Lock-in amplifier configured for demodulation&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;✓ Loop reversal mechanism tested and calibrated&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;✓ Data acquisition system ready for continuous recording&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;✓ Systematic error budget &lt; 10</span><span class="si">% o</span><span class="s2">f expected CCC signal&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;✓ Emergency shutdown procedures for complexity source&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;✓ Real-time analysis pipeline operational&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;✓ Planned measurement duration: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">abba_sequence</span><span class="o">.</span><span class="n">total_duration</span><span class="o">/</span><span class="mi">3600</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2"> hours&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;✓ Backup systems and redundant measurements configured&quot;</span><span class="p">,</span>
+        <span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">checklist</span></div>
+
+
+<div class="viewcode-block" id="CCCProtocol.risk_assessment">
+<a class="viewcode-back" href="../api.html#protocol.CCCProtocol.risk_assessment">[docs]</a>
+    <span class="k">def</span> <span class="nf">risk_assessment</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generate risk assessment with mitigations.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Dictionary with risk analysis</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">risks</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;stark_zeeman_shifts&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;probability&quot;</span><span class="p">:</span> <span class="s2">&quot;high&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;impact&quot;</span><span class="p">:</span> <span class="s2">&quot;medium&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;mitigation&quot;</span><span class="p">:</span> <span class="s2">&quot;Witness channels + field compensation&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;residual_risk&quot;</span><span class="p">:</span> <span class="s2">&quot;low&quot;</span><span class="p">,</span>
+            <span class="p">},</span>
+            <span class="s2">&quot;thermal_fluctuations&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;probability&quot;</span><span class="p">:</span> <span class="s2">&quot;medium&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;impact&quot;</span><span class="p">:</span> <span class="s2">&quot;high&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;mitigation&quot;</span><span class="p">:</span> <span class="s2">&quot;Temperature stabilization + thermal witness&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;residual_risk&quot;</span><span class="p">:</span> <span class="s2">&quot;medium&quot;</span><span class="p">,</span>
+            <span class="p">},</span>
+            <span class="s2">&quot;servo_bleed&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;probability&quot;</span><span class="p">:</span> <span class="s2">&quot;medium&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;impact&quot;</span><span class="p">:</span> <span class="s2">&quot;medium&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;mitigation&quot;</span><span class="p">:</span> <span class="s2">&quot;Servo bandwidth optimization + monitoring&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;residual_risk&quot;</span><span class="p">:</span> <span class="s2">&quot;low&quot;</span><span class="p">,</span>
+            <span class="p">},</span>
+            <span class="s2">&quot;complexity_source_instability&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;probability&quot;</span><span class="p">:</span> <span class="s2">&quot;low&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;impact&quot;</span><span class="p">:</span> <span class="s2">&quot;high&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;mitigation&quot;</span><span class="p">:</span> <span class="s2">&quot;Redundant sources + real-time monitoring&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;residual_risk&quot;</span><span class="p">:</span> <span class="s2">&quot;medium&quot;</span><span class="p">,</span>
+            <span class="p">},</span>
+            <span class="s2">&quot;systematic_drifts&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;probability&quot;</span><span class="p">:</span> <span class="s2">&quot;high&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;impact&quot;</span><span class="p">:</span> <span class="s2">&quot;medium&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;mitigation&quot;</span><span class="p">:</span> <span class="s2">&quot;ABBA cancellation + witness regression&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;residual_risk&quot;</span><span class="p">:</span> <span class="s2">&quot;low&quot;</span><span class="p">,</span>
+            <span class="p">},</span>
+        <span class="p">}</span>
+
+        <span class="k">return</span> <span class="n">risks</span></div>
+</div>
+
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="c1"># Self-test and validation</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;🧪 Testing CCC Protocol Module&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;=&quot;</span> <span class="o">*</span> <span class="mi">50</span><span class="p">)</span>
+
+    <span class="c1"># Create test Θ-only loop</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">📐 Creating Θ-only loop...&quot;</span><span class="p">)</span>
+    <span class="n">theta_loop</span> <span class="o">=</span> <span class="n">ThetaLoop</span><span class="p">(</span>
+        <span class="n">r_star_min</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">r_star_max</span><span class="o">=</span><span class="mf">2.0</span><span class="p">,</span> <span class="n">theta_min</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">theta_max</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">4</span>
+    <span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Loop area A_Σ = </span><span class="si">{</span><span class="n">theta_loop</span><span class="o">.</span><span class="n">area</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">&quot;  Center: (ln r*, θ) = (</span><span class="si">{</span><span class="n">theta_loop</span><span class="o">.</span><span class="n">center_ln_r</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">theta_loop</span><span class="o">.</span><span class="n">center_theta</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">)&quot;</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Test loop reversal</span>
+    <span class="n">reversed_loop</span> <span class="o">=</span> <span class="n">theta_loop</span><span class="o">.</span><span class="n">reverse</span><span class="p">()</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Reversed loop direction: </span><span class="si">{</span><span class="n">reversed_loop</span><span class="o">.</span><span class="n">direction</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Create ABBA sequence</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">🔄 Creating ABBA sequence...&quot;</span><span class="p">)</span>
+    <span class="n">abba_sequence</span> <span class="o">=</span> <span class="n">ABBASequence</span><span class="p">(</span>
+        <span class="n">phase_duration</span><span class="o">=</span><span class="mf">5.0</span><span class="p">,</span>  <span class="c1"># 5 seconds per phase</span>
+        <span class="n">modulation_frequency</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>  <span class="c1"># 0.5 Hz</span>
+        <span class="n">total_cycles</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>  <span class="c1"># 10 complete cycles</span>
+    <span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Cycle duration: </span><span class="si">{</span><span class="n">abba_sequence</span><span class="o">.</span><span class="n">cycle_duration</span><span class="si">}</span><span class="s2"> s&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Total duration: </span><span class="si">{</span><span class="n">abba_sequence</span><span class="o">.</span><span class="n">total_duration</span><span class="si">}</span><span class="s2"> s&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">&quot;  Demodulation efficiency: </span><span class="si">{</span><span class="n">abba_sequence</span><span class="o">.</span><span class="n">compute_demodulation_efficiency</span><span class="p">()</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Create complete protocol</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">🔬 Creating complete CCC protocol...&quot;</span><span class="p">)</span>
+    <span class="n">protocol</span> <span class="o">=</span> <span class="n">CCCProtocol</span><span class="p">(</span><span class="n">theta_loop</span><span class="p">,</span> <span class="n">abba_sequence</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Witness channels: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">protocol</span><span class="o">.</span><span class="n">witness_channels</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Orthogonality tests: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">protocol</span><span class="o">.</span><span class="n">orthogonality_tests</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Generate protocol timing</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">⏱️  Generating protocol timing...&quot;</span><span class="p">)</span>
+    <span class="n">timing</span> <span class="o">=</span> <span class="n">protocol</span><span class="o">.</span><span class="n">generate_protocol_timing</span><span class="p">()</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Time points: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">timing</span><span class="p">[</span><span class="s1">&#39;time_array&#39;</span><span class="p">])</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Modulation efficiency: </span><span class="si">{</span><span class="n">timing</span><span class="p">[</span><span class="s1">&#39;demod_efficiency&#39;</span><span class="p">]</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Execute orthogonality tests</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">🧪 Executing orthogonality tests...&quot;</span><span class="p">)</span>
+    <span class="n">test_results</span> <span class="o">=</span> <span class="n">protocol</span><span class="o">.</span><span class="n">execute_orthogonality_tests</span><span class="p">(</span><span class="n">ccc_signal_normal</span><span class="o">=</span><span class="mf">1e-19</span><span class="p">)</span>
+
+    <span class="n">all_tests_passed</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="k">for</span> <span class="n">test_name</span><span class="p">,</span> <span class="n">result</span> <span class="ow">in</span> <span class="n">test_results</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">passed</span> <span class="o">=</span> <span class="n">result</span><span class="p">[</span><span class="s2">&quot;passed&quot;</span><span class="p">]</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  </span><span class="si">{</span><span class="n">test_name</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="s1">&#39;✅ PASS&#39;</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">passed</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">&#39;❌ FAIL&#39;</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">passed</span><span class="p">:</span>
+            <span class="n">all_tests_passed</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="k">if</span> <span class="n">all_tests_passed</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span>
+            <span class="s2">&quot;  ✅ A3 criterion: All orthogonality tests demonstrate expected behavior!&quot;</span>
+        <span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;  ❌ A3 criterion: Some orthogonality tests failed&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Complexity/dissipation analysis</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">⚡ Complexity/dissipation analysis...&quot;</span><span class="p">)</span>
+    <span class="n">complexity_analysis</span> <span class="o">=</span> <span class="n">protocol</span><span class="o">.</span><span class="n">complexity_dissipation_analysis</span><span class="p">()</span>
+    <span class="n">qubits_range</span> <span class="o">=</span> <span class="n">complexity_analysis</span><span class="p">[</span><span class="s2">&quot;complexity_requirements&quot;</span><span class="p">][</span><span class="s2">&quot;n_qubits_range&quot;</span><span class="p">]</span>
+    <span class="n">local_limit</span> <span class="o">=</span> <span class="n">complexity_analysis</span><span class="p">[</span><span class="s2">&quot;dissipation_budget&quot;</span><span class="p">][</span><span class="s2">&quot;local_limit_w&quot;</span><span class="p">]</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Qubit requirements: </span><span class="si">{</span><span class="n">qubits_range</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">qubits_range</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Local dissipation limit: </span><span class="si">{</span><span class="n">local_limit</span><span class="o">*</span><span class="mf">1e12</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2"> pW&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Generate day-one checklist</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">📋 Day-one checklist preview:&quot;</span><span class="p">)</span>
+    <span class="n">checklist</span> <span class="o">=</span> <span class="n">protocol</span><span class="o">.</span><span class="n">generate_day_one_checklist</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">item</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">checklist</span><span class="p">[:</span><span class="mi">5</span><span class="p">]):</span>  <span class="c1"># Show first 5 items</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  </span><span class="si">{</span><span class="n">item</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  ... and </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">checklist</span><span class="p">)</span><span class="o">-</span><span class="mi">5</span><span class="si">}</span><span class="s2"> more items&quot;</span><span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">✅ CCC Protocol module tests completed!&quot;</span><span class="p">)</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, CCC Clock Development Team.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
