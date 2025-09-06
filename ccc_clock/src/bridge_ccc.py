@@ -11,6 +11,7 @@ Key features:
 - CCC-specific bridge analysis for operational curvature validation
 """
 
+import os
 import sys
 from dataclasses import dataclass
 from typing import Dict, List, Tuple
@@ -30,8 +31,11 @@ try:
         local_se,
         make_random_edges,
     )
+
     # Import from the relocated experiments module
-    sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', 'src', 'analysis'))
+    sys.path.append(
+        os.path.join(os.path.dirname(__file__), "..", "..", "src", "analysis")
+    )
     from experiments_bridge_null import bridge_null_spectral
 
     BRIDGE_TOOLS_AVAILABLE = True
@@ -148,11 +152,6 @@ class CCCBridgeAnalyzer:
                 "residuals": [1e-3, 1e-6],
                 "R_values": [1.0, 1.0],
                 "alpha_estimates": [1.0, 1.0],
-                "final_alpha": 1.0,
-                "eps_values": [eps_start],
-                "residuals": [1e-6],
-                "R_values": [1.0],
-                "alpha_estimates": [1.0],
                 "converged": True,
                 "final_alpha": 1.0,
                 "note": "Fallback implementation - bridge tools not available",

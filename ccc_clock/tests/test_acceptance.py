@@ -16,12 +16,11 @@ import sys
 
 sys.path.append(os.path.join(os.path.dirname(__file__), "..", "src"))
 
-import numpy as np
-import pytest
+import numpy as np  # noqa: E402
 
-from bridge_ccc import CCCBridgeAnalyzer
-from metrology import PARAMETER_SETS, ABBASimulator, CCCMetrology
-from protocol import ABBASequence, CCCProtocol, ThetaLoop
+from bridge_ccc import CCCBridgeAnalyzer  # noqa: E402
+from metrology import PARAMETER_SETS, ABBASimulator, CCCMetrology  # noqa: E402
+from protocol import ABBASequence, CCCProtocol, ThetaLoop  # noqa: E402
 
 
 class TestAcceptanceCriteria:
@@ -149,7 +148,7 @@ class TestAcceptanceCriteria:
         protocol = CCCProtocol(self.test_loop, self.test_abba)
 
         # Compute test signal
-        R_op = self.metrology.compute_operational_curvature(params_test)
+        _R_op = self.metrology.compute_operational_curvature(params_test)  # noqa: F841
         ccc_signal = self.metrology.compute_clock_observable(params_test, A_Sigma_test)
 
         # Execute orthogonality tests
@@ -238,16 +237,16 @@ class TestAcceptanceCriteria:
             # Test metrology
             metrology = CCCMetrology()
             params = PARAMETER_SETS["A"]
-            R_op = metrology.compute_operational_curvature(params)
+            _R_op = metrology.compute_operational_curvature(params)  # noqa: F841
 
             # Test bridge analysis
             analyzer = CCCBridgeAnalyzer()
-            edges = analyzer.create_ccc_edges(n_dim=2, n_edges=3)
+            _edges = analyzer.create_ccc_edges(n_dim=2, n_edges=3)  # noqa: F841
 
             # Test protocol
             loop = ThetaLoop(1.0, 1.1, 0.0, 0.1)
             abba = ABBASequence(1.0, 1.0, 2)
-            protocol = CCCProtocol(loop, abba)
+            _protocol = CCCProtocol(loop, abba)  # noqa: F841
 
             print("   ✅ Basic functionality works")
             functionality_works = True
@@ -279,42 +278,38 @@ class TestAcceptanceCriteria:
         Test A6: Animation generation works in CI environment
         """
         print("\n🧪 Testing A6: Animation generation criterion")
-        
+
         import subprocess
         import tempfile
-        import shutil
-        
+
         # Create a temporary directory for testing
-        with tempfile.TemporaryDirectory() as temp_dir:
-            temp_animation_path = os.path.join(temp_dir, "test_animation.mp4")
-            
+        with tempfile.TemporaryDirectory():
             # Test that we can run the animation script
             try:
-                # Import animation script functions to test basic functionality
-                animation_script = os.path.join(os.path.dirname(__file__), "..", "animate_theta_abba.py")
-                
                 # Test FFmpeg availability
-                result = subprocess.run(["ffmpeg", "-version"], 
-                                      capture_output=True, text=True, timeout=10)
+                result = subprocess.run(
+                    ["ffmpeg", "-version"], capture_output=True, text=True, timeout=10
+                )
                 ffmpeg_available = result.returncode == 0
                 print(f"   FFmpeg available: {ffmpeg_available}")
-                
+
                 # Test matplotlib and dependencies
                 try:
-                    import matplotlib.pyplot as plt
-                    import matplotlib.animation as animation
-                    import numpy as np
+                    import matplotlib  # noqa: F401
+
                     matplotlib_available = True
                     print("   ✅ Matplotlib and animation dependencies available")
                 except ImportError as e:
                     matplotlib_available = False
                     print(f"   ❌ Matplotlib dependencies missing: {e}")
-                
+
                 # Test that the figures directory exists and is writable
                 figures_dir = os.path.join(os.path.dirname(__file__), "..", "figures")
-                figures_writable = os.path.exists(figures_dir) and os.access(figures_dir, os.W_OK)
+                figures_writable = os.path.exists(figures_dir) and os.access(
+                    figures_dir, os.W_OK
+                )
                 print(f"   Figures directory writable: {figures_writable}")
-                
+
                 # Test basic animation parameters are valid
                 animation_params_valid = True
                 try:
@@ -325,20 +320,27 @@ class TestAcceptanceCriteria:
                     assert duration > 0, "Duration must be positive"
                     assert fps > 0, "FPS must be positive"
                     assert total_frames > 0, "Total frames must be positive"
-                    print(f"   Animation parameters valid: duration={duration}s, fps={fps}, frames={total_frames}")
+                    print(
+                        f"   Animation parameters valid: duration={duration}s, fps={fps}, frames={total_frames}"
+                    )
                 except Exception as e:
                     animation_params_valid = False
                     print(f"   ❌ Animation parameters invalid: {e}")
-                
-                a6_met = ffmpeg_available and matplotlib_available and figures_writable and animation_params_valid
+
+                a6_met = (
+                    ffmpeg_available
+                    and matplotlib_available
+                    and figures_writable
+                    and animation_params_valid
+                )
                 print(f"   A6 criterion met: {a6_met}")
-                
+
                 # Individual assertions
                 assert ffmpeg_available, "FFmpeg not available for animation generation"
                 assert matplotlib_available, "Matplotlib dependencies not available"
                 assert figures_writable, "Figures directory not writable"
                 assert animation_params_valid, "Animation parameters invalid"
-                
+
             except Exception as e:
                 print(f"   ❌ Animation generation test failed: {e}")
                 raise AssertionError(f"A6 criterion not met: {e}")
@@ -374,9 +376,11 @@ class TestAcceptanceCriteria:
 
         # A6 quick check - animation generation capability
         import subprocess
+
         try:
-            result = subprocess.run(["ffmpeg", "-version"], 
-                                  capture_output=True, text=True, timeout=10)
+            result = subprocess.run(
+                ["ffmpeg", "-version"], capture_output=True, text=True, timeout=10
+            )
             a6_quick = result.returncode == 0
         except Exception:
             a6_quick = False
