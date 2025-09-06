@@ -26,6 +26,9 @@
   - [x] Documentation builds and deployment
   - [x] Animation generation and artifact storage
   - [x] Codecov integration for coverage reporting
+  - [x] Self-hosted runner support with `.github/workflows/self-hosted-ci.yml`
+  - [x] Hybrid runner configuration with intelligent fallback
+  - [x] Complete setup documentation in `SELF_HOSTED_RUNNERS.md`
 
 ## ✅ Live Dashboard System
 
