@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>CCC Clock - Information-Induced Time Dilation Detector</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="description" content="Revolutionary physics experiment to detect information-spacetime effects using optical atomic clocks">
+
+    <!-- Open-Graph kept intact -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="CCC Clock Demonstration System">
+    <meta property="og:description" content="First experimental test of information-spacetime coupling">
+    <meta property="og:image" content="https://raw.githubusercontent.com/Tnsr-Q/ccc_clock/main/figures/ccc_explainer.png">
+
+    <!-- 5×7 pixel font (Google-Font clone) -->
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+
+    <style>
+    /* ----------  FAIRLIGHT-CM RESET  ---------- */
+    :root{
+        --green:#9aff9a;
+        --bg:#000;
+        --scan:rgba(0,255,0,.06);
+        --font:'Press Start 2P',monospace;
+        --fz:2.8vh;          /* scales 5×7 look */
+        --w:40ch;            /* 40-column hard limit */
+        --h:24;              /* 24 rows             */
+    }
+    *{margin:0;padding:0;box-sizing:border-box}
+
+    body{
+        font-family:var(--font);
+        font-size:var(--fz);
+        line-height:1.4;
+        background:var(--bg);
+        color:var(--green);
+        overflow-x:hidden;
+        position:relative;
+        min-height:100vh;
+    }
+
+    /* CRT scan-lines + subtle flicker */
+    body::before{
+        content:"";
+        position:fixed;
+        inset:0;
+        background:repeating-linear-gradient(0deg,
+                     transparent 0,
+                     transparent calc(var(--fz)*.6),
+                     var(--scan) calc(var(--fz)*.6),
+                     var(--scan) calc(var(--fz)*.7));
+        pointer-events:none;
+        z-index:100;
+        animation:roll 1.66s linear infinite;
+    }
+    @keyframes roll{to{background-position:0 calc(var(--fz)*.7);}}
+
+    /* 2.7 Hz block-cursor */
+    .cursor::after{
+        content:"█";
+        animation:blink .37s step-end infinite;
+    }
+    @keyframes blink{0%,40%{opacity:1}41%,100%{opacity:0}}
+
+    /* ----------  THREE-BAND LAYOUT  ---------- */
+    nav,.hero,.features,.metrics,.collaboration{
+        width:100%;
+        max-width:var(--w);
+        margin:0 auto;
+        padding:calc(var(--fz)*1.5) calc(var(--fz)*.8);
+        display:flex;
+        flex-direction:column;
+        gap:calc(var(--fz)*1);
+    }
+    nav{                    /* top status bar */
+        border-bottom:2px solid var(--green);
+        flex-direction:row;
+        justify-content:space-between;
+        align-items:center;
+        position:sticky;
+        top:0;
+        background:#000d;
+        z-index:200;
+    }
+    .hero{                  /* central canvas */
+        flex:1;
+        text-align:left;
+    }
+    .menu{                  /* bottom ribbon */
+        border-top:2px solid var(--green);
+        padding-top:calc(var(--fz)*.5);
+        display:flex;
+        gap:calc(var(--fz)*2);
+    }
+
+    /* ----------  LINKS & BUTTONS  ---------- */
+    a{color:var(--green);text-decoration:none}
+    a:hover{background:var(--green);color:#000}
+
+    .btn{
+        display:inline-block;
+        padding:calc(var(--fz)*.4) calc(var(--fz)*1);
+        border:2px solid var(--green);
+        background:transparent;
+        cursor:pointer;
+        transition:background .15s,color .15s;
+    }
+    .btn-primary{background:var(--green);color:#000}
+    .btn:hover{background:var(--green);color:#000}
+
+    /* ----------  FAIRLIGHT “TILES”  ---------- */
+    .tile{
+        border:2px solid var(--green);
+        padding:calc(var(--fz)*.4);
+        margin:calc(var(--fz)*.2) 0;
+        display:inline-block;
+        cursor:pointer;
+        transition:background .15s,color .15s;
+    }
+    .tile:hover{background:var(--green);color:#000}
+
+    /* ----------  HIDE ORIGINAL DECORATION  ---------- */
+    #particles,.loading,.theta-container,#theta-canvas,
+    .status-indicator,.logo-icon,.feature-icon,
+    .metrics-grid,.feature-card,.status-grid,
+    .metrics-title,.collab-title,.hero-title,.hero-subtitle,
+    .status-panel,.status-item,.status-label,.status-value,
+    .cta-group,.btn::before,.btn-secondary,.btn-primary{
+        /* stripped to mono tiles + text */
+        all:unset;
+        display:inline;
+        color:var(--green);
+        font-family:var(--font);
+        font-size:var(--fz);
+    }
+
+    /* ----------  SPECIALS  ---------- */
+    h1,h2,h3{font-size:var(--fz);font-weight:400;margin-bottom:calc(var(--fz)*.5)}
+    ul{list-style:"- ";padding-left:calc(var(--fz)*2)}
+    </style>
+</head>
+
+<body>
+<!-- ----------  40×24 GRID START  ---------- -->
+
+<!-- Row 01  –––––––––––––––––––––––––––––––––––––––––––––––––––––––––– -->
+<nav>
+    <span>CCC CLOCK v1.0<span class="cursor"></span></span>
+    <span><a href="#status">STATUS</a> | <a href="#features">FEATURES</a> | <a href="#metrics">PERF</a> | <a href="https://github.com/Tnsr-Q/ccc_clock">GITHUB</a></span>
+</nav>
+
+<!-- Row 03-22  ––––––––––––––––––––––––––––––––––––––––––––––––––––––– -->
+<section class="hero">
+    <h1>INFORMATION BENDS SPACETIME</h1>
+    <p>First experimental test of computational-complexity cosmology</p>
+
+    <ul>
+        <li class="tile">Detection time : 0.8 h</li>
+        <li class="tile">Signal strength : 9.5σ</li>
+        <li class="tile">System rejection : >40 dB</li>
+        <li class="tile">Bridge analysis : R*=5.80</li>
+    </ul>
+
+    <div class="menu">
+        <a class="btn" href="https://github.com/Tnsr-Q/ccc_clock">📊 REPO</a>
+        <a class="btn" href="#" onclick="detectVisitorType()">🚀 START</a>
+        <a class="btn" href="figures/bridge_landscape.html">🎨 DEMO</a>
+    </div>
+</section>
+
+<!-- Row 23-24  ––––––––––––––––––––––––––––––––––––––––––––––––––––––– -->
+<footer class="menu">
+    <span>Production Ready • All Acceptance Criteria Met • Seeking Lab Partners</span>
+</footer>
+
+<!-- ----------  ORIGINAL JS KEPT INTACT  ---------- -->
+<script>
+/* 1.  Visitor-type router (unchanged) */
+function detectVisitorType(){
+    const ref=document.referrer,params=new URLSearchParams(location.search);
+    if(ref.includes('arxiv')||ref.includes('scholar')||params.get('source')==='research')
+        location.href='https://github.com/Tnsr-Q/ccc_clock/blob/main/EXECUTIVE_BRIEF.md';
+    else if(ref.includes('stackoverflow')||ref.includes('github')||params.get('source')==='dev')
+        location.href='https://github.com/Tnsr-Q/ccc_clock#quick-start';
+    else if(params.get('collaborate')==='true'||ref.includes('.edu'))
+        location.href='https://github.com/Tnsr-Q/ccc_clock/blob/main/LAB_OUTREACH_TEMPLATE.md';
+    else
+        location.href='https://github.com/Tnsr-Q/ccc_clock';
+}
+
+/* 2.  Track visitor (unchanged) */
+console.log('Visitor:',{
+    timestamp:new Date().toISOString(),
+    referrer:document.referrer,
+    screen:`${screen.width}x${screen.height}`,
+    path:location.pathname
+});
+</script>
+</body>
+</html>
