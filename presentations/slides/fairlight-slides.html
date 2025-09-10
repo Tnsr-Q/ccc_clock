@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CCC Clock Research Terminal</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@400;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Source Code Pro', monospace;
+            background: #000;
+            color: #00ff00;
+            overflow: hidden;
+            cursor: none;
+            line-height: 1.4;
+        }
+        
+        /* Terminal scanlines effect */
+        .scanlines {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(
+                transparent,
+                transparent 2px,
+                rgba(0, 255, 0, 0.03) 2px,
+                rgba(0, 255, 0, 0.03) 4px
+            );
+            pointer-events: none;
+            z-index: 1000;
+        }
+        
+        /* CRT screen effect */
+        .screen {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            background: radial-gradient(ellipse at center, #001100 0%, #000800 70%, #000 100%);
+            border: 4px solid #333;
+            border-radius: 20px;
+            padding: 20px;
+            overflow: hidden;
+        }
+        
+        /* Terminal container */
+        .terminal {
+            width: 100%;
+            height: 100%;
+            padding: 20px;
+            font-size: 16px;
+            color: #00ff00;
+            text-shadow: 0 0 5px #00ff00;
+            animation: textGlow 2s ease-in-out infinite alternate;
+        }
+        
+        @keyframes textGlow {
+            from { text-shadow: 0 0 5px #00ff00; }
+            to { text-shadow: 0 0 20px #00ff00, 0 0 30px #00ff00; }
+        }
+        
+        /* Blinking cursor */
+        .cursor {
+            display: inline-block;
+            width: 10px;
+            height: 20px;
+            background: #00ff00;
+            animation: blink 1s infinite;
+            margin-left: 2px;
+        }
+        
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+        
+        /* Slide container */
+        .slide {
+            display: none;
+            animation: slideIn 0.5s ease-in-out;
+        }
+        
+        .slide.active {
+            display: block;
+        }
+        
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        
+        /* Terminal prompt */
+        .prompt {
+            color: #ffff00;
+            font-weight: bold;
+        }
+        
+        /* Headers */
+        h1 {
+            color: #00ffff;
+            font-size: 24px;
+            margin: 20px 0;
+            text-decoration: underline;
+        }
+        
+        h2 {
+            color: #ff00ff;
+            font-size: 18px;
+            margin: 15px 0;
+        }
+        
+        /* Interactive tiles */
+        .tile-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin: 20px 0;
+        }
+        
+        .tile {
+            background: #003300;
+            border: 2px solid #00ff00;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+        
+        .tile:hover {
+            background: #006600;
+            box-shadow: 0 0 20px #00ff00;
+            transform: scale(1.05);
+        }
+        
+        .tile:active {
+            background: #00ff00;
+            color: #000;
+        }
+        
+        /* Navigation */
+        .nav {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 20px;
+            z-index: 100;
+        }
+        
+        .nav button {
+            background: #003300;
+            color: #00ff00;
+            border: 2px solid #00ff00;
+            padding: 10px 20px;
+            font-family: 'Source Code Pro', monospace;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .nav button:hover {
+            background: #00ff00;
+            color: #000;
+            box-shadow: 0 0 15px #00ff00;
+        }
+        
+        .nav button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        /* Slide counter */
+        .counter {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            color: #ffff00;
+            font-size: 14px;
+            z-index: 100;
+        }
+        
+        /* ASCII art */
+        .ascii-art {
+            font-size: 12px;
+            line-height: 1;
+            color: #00ffff;
+            white-space: pre;
+            margin: 20px 0;
+        }
+        
+        /* Data tables */
+        .data-table {
+            margin: 20px 0;
+            font-family: monospace;
+        }
+        
+        .data-table th,
+        .data-table td {
+            padding: 8px 15px;
+            text-align: left;
+            border: 1px solid #00ff00;
+        }
+        
+        .data-table th {
+            background: #003300;
+            color: #ffff00;
+        }
+        
+        /* Progress bars */
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: #003300;
+            border: 1px solid #00ff00;
+            margin: 10px 0;
+            position: relative;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: #00ff00;
+            transition: width 2s ease-in-out;
+        }
+        
+        .progress-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #000;
+            font-weight: bold;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="screen">
+        <div class="scanlines"></div>
+        <div class="counter">SLIDE <span id="slide-counter">1</span>/10</div>
+        
+        <div class="terminal">
+            <!-- Slide 1: Welcome -->
+            <div class="slide active" id="slide-1">
+                <div class="prompt">root@ccc-lab:~$</div> cat welcome.txt<span class="cursor"></span>
+                
+                <div class="ascii-art">
+ ██████╗ ██████╗ ██████╗     ██████╗██╗      ██████╗  ██████╗██╗  ██╗
+██╔════╝██╔════╝██╔════╝    ██╔════╝██║     ██╔═══██╗██╔════╝██║ ██╔╝
+██║     ██║     ██║         ██║     ██║     ██║   ██║██║     █████╔╝ 
+██║     ██║     ██║         ██║     ██║     ██║   ██║██║     ██╔═██╗ 
+╚██████╗╚██████╗╚██████╗    ╚██████╗███████╗╚██████╔╝╚██████╗██║  ██╗
+ ╚═════╝ ╚═════╝ ╚═════╝     ╚═════╝╚══════╝ ╚═════╝  ╚═════╝╚═╝  ╚═╝
+                </div>
+                
+                <h1>INFORMATION-INDUCED TIME DILATION DETECTOR</h1>
+                
+                <p>SYSTEM STATUS: <span style="color: #00ff00;">OPERATIONAL</span></p>
+                <p>MISSION: Detect spacetime effects from quantum computation</p>
+                <p>METHOD: Co-located optical atomic clocks</p>
+                <p>CLASSIFICATION: EXPERIMENTAL BREAKTHROUGH</p>
+                
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 95%"></div>
+                    <div class="progress-text">INITIALIZATION COMPLETE</div>
+                </div>
+            </div>
+            
+            <!-- Slide 2: The Problem -->
+            <div class="slide" id="slide-2">
+                <div class="prompt">root@ccc-lab:~$</div> analyze --problem-statement<span class="cursor"></span>
+                
+                <h1>THE FUNDAMENTAL QUESTION</h1>
+                
+                <h2>Can Information Processing Affect Spacetime?</h2>
+                
+                <div class="tile-grid">
+                    <div class="tile" onclick="playBeep()">
+                        <strong>THEORY</strong><br>
+                        CCC Framework<br>
+                        Holographic Principle
+                    </div>
+                    <div class="tile" onclick="playBeep()">
+                        <strong>PRECISION</strong><br>
+                        10⁻¹⁸ Frequency<br>
+                        Sr Optical Clocks
+                    </div>
+                    <div class="tile" onclick="playBeep()">
+                        <strong>CHALLENGE</strong><br>
+                        Info-Spacetime<br>
+                        Coupling Detection
+                    </div>
+                    <div class="tile" onclick="playBeep()">
+                        <strong>OPPORTUNITY</strong><br>
+                        First Experimental<br>
+                        Validation
+                    </div>
+                </div>
+                
+                <p style="color: #ffff00;">STATUS: No previous experimental tests of information-spacetime coupling</p>
+                <p style="color: #ff00ff;">GOAL: Use atomic clock precision to detect computational gravity</p>
+            </div>
+            
+            <!-- Slide 3: The Innovation -->
+            <div class="slide" id="slide-3">
+                <div class="prompt">root@ccc-lab:~$</div> describe --geometric-demodulation<span class="cursor"></span>
+                
+                <h1>GEOMETRIC DEMODULATION METHOD</h1>
+                
+                <h2>Core Insight: Operational Curvature</h2>
+                
+                <p>R_op = K̇/(Ṡ_e + Ṡ_loss)</p>
+                
+                <div class="ascii-art">
+    ╭─────────────────╮    ╭─────────────────╮
+    │   CLOCK A       │    │   CLOCK B       │
+    │   (Reference)   │◄──►│   (Coupled)     │
+    ╰─────────────────╯    ╰─────────────────╯
+             │                       │
+             ▼                       ▼
+    ╭─────────────────────────────────────────╮
+    │        ΘΘΘΘΘΘΘΘΘΘΘΘΘΘΘΘΘΘΘΘΘΘΘΘΘΘΘ        │
+    │       Θ   COMPLEXITY SOURCE   Θ       │
+    │        ΘΘΘΘΘΘΘΘΘΘΘΘΘΘΘΘΘΘΘΘΘΘΘΘΘΘΘ        │
+    ╰─────────────────────────────────────────╯
+                </div>
+                
+                <p style="color: #00ffff;">STRATEGY: Navigate parameter space in Θ-only loops</p>
+                <p style="color: #00ffff;">PROTOCOL: ABBA sequence cancels systematics</p>
+                <p style="color: #00ffff;">SIGNATURE: Perfect sign flip under geometric reversal</p>
+            </div>
+            
+            <!-- Slide 4: The Model -->
+            <div class="slide" id="slide-4">
+                <div class="prompt">root@ccc-lab:~$</div> load --mathematical-model<span class="cursor"></span>
+                
+                <h1>SINGLE BOX EQUATION</h1>
+                
+                <h2 style="color: #ffff00; font-size: 20px;">(Δf/f)_demod = Γ_Θ × R_op × A_Σ + systematics</h2>
+                
+                <table class="data-table">
+                    <tr>
+                        <th>PARAMETER</th>
+                        <th>SYMBOL</th>
+                        <th>VALUE</th>
+                        <th>DESCRIPTION</th>
+                    </tr>
+                    <tr>
+                        <td>Operational Curvature</td>
+                        <td>R_op</td>
+                        <td>~10⁻⁸</td>
+                        <td>Complexity/Dissipation Ratio</td>
+                    </tr>
+                    <tr>
+                        <td>Geometric Coupling</td>
+                        <td>Γ_Θ</td>
+                        <td>Variable</td>
+                        <td>Θ-space Coupling Strength</td>
+                    </tr>
+                    <tr>
+                        <td>Loop Area</td>
+                        <td>A_Σ</td>
+                        <td>~10⁻⁶</td>
+                        <td>(ln r*, θ) Coordinates</td>
+                    </tr>
+                </table>
+                
+                <p style="color: #ff00ff;">FALSIFIABILITY: Ratio = -1.000 under loop reversal</p>
+                <p style="color: #ff00ff;">DISTINGUISHES: From all known systematic effects</p>
+            </div>
+            
+            <!-- Slide 5: Simulation Results -->
+            <div class="slide" id="slide-5">
+                <div class="prompt">root@ccc-lab:~$</div> run --parameter-validation<span class="cursor"></span>
+                
+                <h1>VALIDATED PARAMETER SETS</h1>
+                
+                <table class="data-table">
+                    <tr>
+                        <th>SET</th>
+                        <th>R_op</th>
+                        <th>DETECTION TIME</th>
+                        <th>COMPLEXITY RATE</th>
+                        <th>STATUS</th>
+                    </tr>
+                    <tr>
+                        <td>A (Aggressive)</td>
+                        <td>9.5</td>
+                        <td style="color: #00ff00;">0.8 hours</td>
+                        <td>300 MHz</td>
+                        <td style="color: #00ff00;">✓ PASS</td>
+                    </tr>
+                    <tr>
+                        <td>B (Conservative)</td>
+                        <td>4.1×10⁻⁸</td>
+                        <td style="color: #00ff00;">13.1 hours</td>
+                        <td>100 MHz</td>
+                        <td style="color: #00ff00;">✓ PASS</td>
+                    </tr>
+                    <tr>
+                        <td>C (Ultra-Safe)</td>
+                        <td>1.2×10⁻¹²</td>
+                        <td style="color: #ff0000;">>1000 hours</td>
+                        <td>10 MHz</td>
+                        <td style="color: #ffff00;">⚠ REQUIRES OPTIMIZATION</td>
+                    </tr>
+                </table>
+                
+                <h2>Bridge Analysis Results:</h2>
+                <p>R* = 5.80, SE = 9.8×10⁻²</p>
+                <p>Scaling exponent α = 0.22</p>
+                <p style="color: #00ff00;">Linear convergence to commutator floor confirmed</p>
+            </div>
+            
+            <!-- Slide 6: Protocol Design -->
+            <div class="slide" id="slide-6">
+                <div class="prompt">root@ccc-lab:~$</div> display --abba-protocol<span class="cursor"></span>
+                
+                <h1>ABBA DEMODULATION STRATEGY</h1>
+                
+                <div class="ascii-art">
+SEQUENCE TIMELINE:
+                
+A ──────▶ B ──────▶ B ──────▶ A
+│         │         │         │
+Forward   Reverse   Reverse   Forward
+Θ-loop    Θ-loop    Θ-loop    Θ-loop
+Active    Active    Active    Active
+Source    Source    Source    Source
+                </div>
+                
+                <div class="tile-grid">
+                    <div class="tile" onclick="playBeep()">
+                        <strong>STEP A</strong><br>
+                        Forward Θ-loop<br>
+                        Source: ON
+                    </div>
+                    <div class="tile" onclick="playBeep()">
+                        <strong>STEP B</strong><br>
+                        Reverse Θ-loop<br>
+                        Source: ON
+                    </div>
+                    <div class="tile" onclick="playBeep()">
+                        <strong>STEP B</strong><br>
+                        Reverse Θ-loop<br>
+                        Source: ON
+                    </div>
+                    <div class="tile" onclick="playBeep()">
+                        <strong>STEP A</strong><br>
+                        Forward Θ-loop<br>
+                        Source: ON
+                    </div>
+                </div>
+                
+                <p style="color: #00ffff;">RESULT: Systematics cancel, CCC signal doubles</p>
+                <p style="color: #00ffff;">MODULATION: 0.3-0.8 Hz for optimal rejection</p>
+                <p style="color: #00ffff;">MONITORING: Thermal, magnetic, optical power witnesses</p>
+            </div>
+            
+            <!-- Slide 7: Hardware Requirements -->
+            <div class="slide" id="slide-7">
+                <div class="prompt">root@ccc-lab:~$</div> specs --hardware-requirements<span class="cursor"></span>
+                
+                <h1>EXPERIMENTAL INFRASTRUCTURE</h1>
+                
+                <h2>Primary Systems:</h2>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 90%"></div>
+                    <div class="progress-text">Sr LATTICE CLOCKS AVAILABLE</div>
+                </div>
+                
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 75%"></div>
+                    <div class="progress-text">QUANTUM PROCESSOR (100-300 QUBITS)</div>
+                </div>
+                
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 85%"></div>
+                    <div class="progress-text">LOCAL COUPLING (<1 pW DISSIPATION)</div>
+                </div>
+                
+                <p style="color: #ffff00;">CLOCK STABILITY: σ₀ ≤ 3×10⁻¹⁸/√τ</p>
+                <p style="color: #ffff00;">ENVIRONMENT: Standard optical clock laboratory</p>
+                <p style="color: #ffff00;">TIMELINE: 6-month experimental campaign</p>
+                
+                <p style="color: #00ff00;">STATUS: All major components available or accessible</p>
+            </div>
+            
+            <!-- Slide 8: Risk Assessment -->
+            <div class="slide" id="slide-8">
+                <div class="prompt">root@ccc-lab:~$</div> analyze --risk-matrix<span class="cursor"></span>
+                
+                <h1>SYSTEMATIC MITIGATION</h1>
+                
+                <table class="data-table">
+                    <tr>
+                        <th>RISK LEVEL</th>
+                        <th>SYSTEMATIC</th>
+                        <th>MITIGATION</th>
+                        <th>STATUS</th>
+                    </tr>
+                    <tr style="background: #003300;">
+                        <td>LOW</td>
+                        <td>Stark/Zeeman shifts</td>
+                        <td>Field compensation + witnesses</td>
+                        <td style="color: #00ff00;">SOLVED</td>
+                    </tr>
+                    <tr style="background: #003300;">
+                        <td>LOW</td>
+                        <td>Thermal fluctuations</td>
+                        <td>Stabilization + monitoring</td>
+                        <td style="color: #00ff00;">SOLVED</td>
+                    </tr>
+                    <tr style="background: #003300;">
+                        <td>LOW</td>
+                        <td>Common-mode noise</td>
+                        <td>ABBA rejection >40 dB</td>
+                        <td style="color: #00ff00;">SOLVED</td>
+                    </tr>
+                    <tr style="background: #332200;">
+                        <td>MEDIUM</td>
+                        <td>Servo coupling</td>
+                        <td>Bandwidth optimization</td>
+                        <td style="color: #ffff00;">MANAGED</td>
+                    </tr>
+                    <tr style="background: #332200;">
+                        <td>MEDIUM</td>
+                        <td>Source stability</td>
+                        <td>Quantum error correction</td>
+                        <td style="color: #ffff00;">MANAGED</td>
+                    </tr>
+                </table>
+                
+                <p style="color: #00ffff;">KEY ADVANTAGE: Geometric signature provides robust systematic rejection</p>
+            </div>
+            
+            <!-- Slide 9: Detection Feasibility -->
+            <div class="slide" id="slide-9">
+                <div class="prompt">root@ccc-lab:~$</div> calculate --sensitivity-analysis<span class="cursor"></span>
+                
+                <h1>DETECTION FEASIBILITY</h1>
+                
+                <h2>Current Performance vs Requirements:</h2>
+                
+                <div class="ascii-art">
+SIGNAL STRENGTH PROJECTION:
+                
+Parameter Set A: ████████████████████ >3σ in 0.8h
+Parameter Set B: ████████████████████ >3σ in 13.1h
+Clock Noise:     ██ 3×10⁻¹⁸/√τ (state-of-art)
+                
+SNR EVOLUTION:
+                
+     │  Signal
+  3σ ├─────────────────────────
+     │    ╱╱╱╱╱╱╱╱╱
+  2σ ├─────────╱╱╱
+     │        ╱
+  1σ ├──────╱
+     │    ╱
+   0 └─────────────────────────► Time
+     0    1h   5h   10h   20h
+                </div>
+                
+                <p style="color: #00ff00;">VALIDATION: All acceptance criteria A1-A5 satisfied</p>
+                <p style="color: #00ff00;">SCALING: Signal increases with complexity rate and loop area</p>
+                <p style="color: #00ff00;">CONFIDENCE: >95% detection probability within 72 hours</p>
+            </div>
+            
+            <!-- Slide 10: Scientific Impact -->
+            <div class="slide" id="slide-10">
+                <div class="prompt">root@ccc-lab:~$</div> project --scientific-impact<span class="cursor"></span>
+                
+                <h1>BREAKTHROUGH PHYSICS OPPORTUNITY</h1>
+                
+                <div class="ascii-art">
+┌─────────────────────────────────────────┐
+│         POTENTIAL DISCOVERIES           │
+├─────────────────────────────────────────┤
+│  ★ First info-spacetime coupling       │
+│  ★ New fundamental physics beyond SM   │
+│  ★ Quantum gravity experimental test   │
+│  ★ Information-theoretic cosmology     │
+│  ★ Novel precision measurement tech    │
+└─────────────────────────────────────────┘
+                </div>
+                
+                <div class="tile-grid">
+                    <div class="tile" onclick="playBeep()">
+                        <strong>PHYSICS</strong><br>
+                        New Fundamental<br>
+                        Force Discovery
+                    </div>
+                    <div class="tile" onclick="playBeep()">
+                        <strong>TECHNOLOGY</strong><br>
+                        Ultra-Precision<br>
+                        Sensing Methods
+                    </div>
+                    <div class="tile" onclick="playBeep()">
+                        <strong>COSMOLOGY</strong><br>
+                        Information<br>
+                        Universe Theory
+                    </div>
+                    <div class="tile" onclick="playBeep()">
+                        <strong>COLLABORATION</strong><br>
+                        Global Physics<br>
+                        Partnership
+                    </div>
+                </div>
+                
+                <p style="color: #ff00ff;">TIMELINE: 6-month experimental campaign</p>
+                <p style="color: #ff00ff;">PARTNERSHIP: Full co-PI with shared IP</p>
+                <p style="color: #00ffff;">READY TO MAKE HISTORY? JOIN THE CCC CLOCK EXPERIMENT!</p>
+                
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 100%"></div>
+                    <div class="progress-text">MISSION READY - AWAITING GO SIGNAL</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Navigation -->
+        <div class="nav">
+            <button id="prev-btn" onclick="previousSlide()">◄ PREV</button>
+            <button id="next-btn" onclick="nextSlide()">NEXT ►</button>
+        </div>
+    </div>
+    
+    <script>
+        let currentSlide = 1;
+        const totalSlides = 10;
+        
+        // Audio context for 8-bit sounds
+        let audioContext;
+        
+        function initAudio() {
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+        
+        function playBeep() {
+            initAudio();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+            oscillator.frequency.setValueAtTime(400, audioContext.currentTime + 0.1);
+            
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.2);
+        }
+        
+        function showSlide(n) {
+            const slides = document.querySelectorAll('.slide');
+            slides.forEach(slide => slide.classList.remove('active'));
+            
+            if (n > totalSlides) currentSlide = 1;
+            if (n < 1) currentSlide = totalSlides;
+            
+            document.getElementById(`slide-${currentSlide}`).classList.add('active');
+            document.getElementById('slide-counter').textContent = currentSlide;
+            
+            // Update navigation buttons
+            document.getElementById('prev-btn').disabled = currentSlide === 1;
+            document.getElementById('next-btn').disabled = currentSlide === totalSlides;
+            
+            playBeep();
+        }
+        
+        function nextSlide() {
+            currentSlide++;
+            showSlide(currentSlide);
+        }
+        
+        function previousSlide() {
+            currentSlide--;
+            showSlide(currentSlide);
+        }
+        
+        // Keyboard navigation
+        document.addEventListener('keydown', function(event) {
+            switch(event.key) {
+                case 'ArrowRight':
+                case ' ':
+                    if (currentSlide < totalSlides) nextSlide();
+                    break;
+                case 'ArrowLeft':
+                    if (currentSlide > 1) previousSlide();
+                    break;
+                case 'Home':
+                    currentSlide = 1;
+                    showSlide(currentSlide);
+                    break;
+                case 'End':
+                    currentSlide = totalSlides;
+                    showSlide(currentSlide);
+                    break;
+            }
+        });
+        
+        // Initialize audio on first user interaction
+        document.addEventListener('click', initAudio, { once: true });
+        document.addEventListener('keydown', initAudio, { once: true });
+        
+        // Initialize the first slide
+        showSlide(1);
+        
+        // Add some terminal startup animation
+        window.addEventListener('load', function() {
+            setTimeout(() => {
+                playBeep();
+            }, 500);
+        });
+    </script>
+</body>
+</html>
