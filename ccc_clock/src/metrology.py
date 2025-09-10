@@ -2,9 +2,10 @@
 CCC Clock Demonstration System - Core Metrology Module
 """
 
+from typing import Any, Dict
+
 # Core metrology implementation for CCC theory
 import numpy as np
-from typing import Dict, Any
 
 # Parameter sets for different detection scenarios
 PARAMETER_SETS = {

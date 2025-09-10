@@ -2,14 +2,15 @@
 Acceptance criteria tests for CCC Clock Demonstration System
 """
 
-import pytest
-import sys
 import os
+import sys
+
+import pytest
 
 sys.path.append(os.path.join(os.path.dirname(__file__), "..", "src"))
 
-from metrology import PARAMETER_SETS, CCCMetrology
 from bridge_ccc import CCCBridgeAnalyzer
+from metrology import PARAMETER_SETS, CCCMetrology
 from protocol import ABBASequence, CCCProtocol
 
 
